@@ -24,7 +24,8 @@ CREATE TABLE billett (
     banestrekningId INTEGER NOT NULL,
     sekvensNrStart INTEGER NOT NULL,
     sekvensNrEnde INTEGER NOT NULL,
-    togruteForekomstDato DATE NOT NULL,
+    togruteForekomstUkeDagNr INTEGER NOT NULL,
+    dato DATE NOT NULL,
 
     PRIMARY KEY(billettNr, togruteId, ordreNr),
 
@@ -52,15 +53,16 @@ CREATE TABLE billett (
         ON UPDATE CASCADE
         ON DELETE CASCADE,
         
-    FOREIGN KEY (togruteForekomstDato) REFERENCES togRuteForekomst(dato)
+    FOREIGN KEY (togruteForekomstUkeDagNr) REFERENCES togRuteForekomst(ukeDagNr)
         ON UPDATE CASCADE
         ON DELETE SET NULL
 );
 
 CREATE TABLE togRuteForekomst (
     togruteId INTEGER,
-    dato DATE,
-    PRIMARY KEY (togruteId, dato),
+    ukedagNr INTEGER,
+
+    PRIMARY KEY (togruteId, ukedagNr),
 
     FOREIGN KEY (togruteId) REFERENCES togrute(togruteId)
         ON UPDATE CASCADE
@@ -167,13 +169,14 @@ CREATE TABLE vognOppsett (
         ON DELETE CASCADE
 );
 
-CREATE TABLE vognOppsettVogner (
+CREATE TABLE vognOppsettVogn (
     togruteId INTEGER,
     vognOppsettId INTEGER,
     vognId INTEGER,
     vognNr INTEGER NOT NULL,
 
     PRIMARY KEY (togruteId, vognOppsettId, vognId),
+    UNIQUE (togruteId, vognOppsettId, vognId, vognNr),
 
     FOREIGN KEY (togruteId) REFERENCES togrute(togruteId)
         ON UPDATE CASCADE
@@ -273,6 +276,36 @@ INSERT INTO vogn (vognModellId) VALUES (1);
 
 -- Vognoppsett
 INSERT INTO vognOppsett (togruteId) VALUES (1); -- Dagtog Trondheim til Bodø
-INSERT INTO vognOppsett (togruteId) VALUES (2); -- Nattog Trondheim til Bodø
-INSERT INTO vognOppsett (togruteId) VALUES (3); -- Morgentog Mo i Rana til Trondheim
+INSERT INTO vognOppsettVogn VALUES (1, 1, 1, 1);
+INSERT INTO vognOppsettVogn VALUES (1, 1, 2, 2);
 
+INSERT INTO vognOppsett (togruteId) VALUES (2); -- Nattog Trondheim til Bodø
+INSERT INTO vognOppsettVogn VALUES (2, 2, 3, 1);
+INSERT INTO vognOppsettVogn VALUES (2, 2, 4, 2);
+
+INSERT INTO vognOppsett (togruteId) VALUES (3); -- Morgentog Mo i Rana til Trondheim
+INSERT INTO vognOppsettVogn VALUES (3, 3, 5, 1);
+
+-- Ruteforekomster
+-- For togrute 1
+INSERT INTO togRuteForekomst VALUES (1, 1);
+INSERT INTO togRuteForekomst VALUES (1, 2);
+INSERT INTO togRuteForekomst VALUES (1, 3);
+INSERT INTO togRuteForekomst VALUES (1, 4);
+INSERT INTO togRuteForekomst VALUES (1, 5);
+
+-- For togrute 2
+INSERT INTO togRuteForekomst VALUES (2, 1);
+INSERT INTO togRuteForekomst VALUES (2, 2);
+INSERT INTO togRuteForekomst VALUES (2, 3);
+INSERT INTO togRuteForekomst VALUES (2, 4);
+INSERT INTO togRuteForekomst VALUES (2, 5);
+INSERT INTO togRuteForekomst VALUES (2, 6);
+INSERT INTO togRuteForekomst VALUES (2, 7);
+
+-- For togrute 3
+INSERT INTO togRuteForekomst VALUES (3, 1);
+INSERT INTO togRuteForekomst VALUES (3, 2);
+INSERT INTO togRuteForekomst VALUES (3, 3);
+INSERT INTO togRuteForekomst VALUES (3, 4);
+INSERT INTO togRuteForekomst VALUES (3, 5);
