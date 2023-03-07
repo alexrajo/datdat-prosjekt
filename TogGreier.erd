@@ -57,7 +57,7 @@
             <attribute is_hidden="false" is_key="false" name="kupeer" type="Integer"/>
         </attributes>
     </entity>
-    <entity id="34" is_weak="true" name="VognOppsett" x="282" y="554">
+    <entity id="34" is_weak="false" name="VognOppsett" x="282" y="554">
         <attributes>
             <attribute is_hidden="false" is_key="true" name="vognOppsettId" type="Integer"/>
         </attributes>
@@ -110,7 +110,7 @@
     <diamond id="31" is_weak="false" name="Har" x="149" y="436">
         <attributes/>
     </diamond>
-    <diamond id="35" is_weak="true" name="DelAv" x="415" y="509">
+    <diamond id="35" is_weak="false" name="DelAv" x="415" y="509">
         <attributes/>
     </diamond>
     <diamond id="38" is_weak="false" name="DelAv" x="225" y="510">
@@ -210,7 +210,7 @@
         <connection connection_side="1" direction="1" object_id="31" relation_point_x="165" relation_point_y="436"/>
     </line>
     <line cardinality_string="(1,1)" has_u="false" id="36" is_weak="false" role="" style="0" turned="false">
-        <connection connection_side="1" direction="1" object_id="34" relation_point_x="354" relation_point_y="554"/>
+        <connection connection_side="1" direction="1" object_id="34" relation_point_x="348" relation_point_y="554"/>
         <connection connection_side="0" direction="0" object_id="35" relation_point_x="415" relation_point_y="525"/>
     </line>
     <line cardinality_string="(1,1)" has_u="false" id="37" is_weak="false" role="" style="0" turned="false">
@@ -218,7 +218,7 @@
         <connection connection_side="1" direction="1" object_id="35" relation_point_x="431" relation_point_y="509"/>
     </line>
     <line cardinality_string="(1,n)" has_u="false" id="39" is_weak="false" role="" style="0" turned="false">
-        <connection connection_side="1" direction="1" object_id="34" relation_point_x="318" relation_point_y="554"/>
+        <connection connection_side="1" direction="1" object_id="34" relation_point_x="315" relation_point_y="554"/>
         <connection connection_side="2" direction="0" object_id="38" relation_point_x="257" relation_point_y="526"/>
     </line>
     <line cardinality_string="(1,1)" has_u="false" id="44" is_weak="false" role="" style="0" turned="false">

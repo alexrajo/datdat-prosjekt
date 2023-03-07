@@ -159,11 +159,9 @@ CREATE TABLE vogn (
 );
 
 CREATE TABLE vognOppsett (
-    togruteId INTEGER,
-    vognOppsettId INTEGER AUTOINCREMENT,
+    vognOppsettId INTEGER PRIMARY KEY AUTOINCREMENT,
+    togruteId INTEGER NOT NULL,
     
-    PRIMARY KEY (togruteId, vognOppsettId),
-
     FOREIGN KEY (togruteId) REFERENCES togrute(togruteId)
         ON UPDATE CASCADE
         ON DELETE CASCADE
@@ -199,10 +197,6 @@ CREATE TABLE stopperPaa (
     PRIMARY KEY (togruteId, sekvensNr),
 
     FOREIGN KEY (togruteId) REFERENCES togrute(togruteId)
-        ON UPDATE CASCADE
-        ON DELETE CASCADE,
-        
-    FOREIGN KEY (banestrekningId) REFERENCES stasjonPaaStrekning(banestrekningId)
         ON UPDATE CASCADE
         ON DELETE CASCADE,
 
