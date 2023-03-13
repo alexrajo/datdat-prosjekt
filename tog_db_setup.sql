@@ -17,31 +17,20 @@ CREATE TABLE kundeOrdre (
 
 CREATE TABLE billett (
     billettNr INTEGER,
-    togruteId INTEGER,
     ordreNr INTEGER,
     vognId INTEGER NOT NULL,
     plassNr INTEGER NOT NULL,
-    banestrekningId INTEGER NOT NULL,
     sekvensNrStart INTEGER NOT NULL,
     sekvensNrEnde INTEGER NOT NULL,
-    togruteForekomstUkeDagNr INTEGER NOT NULL,
-    dato DATE NOT NULL,
+    forekomstId INTEGER NOT NULL,
 
-    PRIMARY KEY(billettNr, togruteId, ordreNr),
-
-    FOREIGN KEY (togruteId) REFERENCES togrute(togruteId)
-        ON UPDATE CASCADE
-        ON DELETE CASCADE,
+    PRIMARY KEY(billettNr),
 
     FOREIGN KEY (ordreNr) REFERENCES kundeOrdre(ordreNr)
         ON UPDATE CASCADE
         ON DELETE CASCADE,
 
-    FOREIGN KEY (vognId) REFERENCES togrute(togruteId)
-        ON UPDATE CASCADE
-        ON DELETE CASCADE,
-        
-    FOREIGN KEY (banestrekningId) REFERENCES banestrekning(banestrekningId)
+    FOREIGN KEY (vognId) REFERENCES vogn(vognId)
         ON UPDATE CASCADE
         ON DELETE CASCADE,
 
@@ -53,12 +42,30 @@ CREATE TABLE billett (
         ON UPDATE CASCADE
         ON DELETE CASCADE,
         
-    FOREIGN KEY (togruteForekomstUkeDagNr) REFERENCES togRuteForekomst(ukeDagNr)
+    FOREIGN KEY (forekomstId) REFERENCES togruteforekomst(forekomstId)
         ON UPDATE CASCADE
         ON DELETE SET NULL
 );
 
-CREATE TABLE togRuteForekomst (
+CREATE TABLE togruteforekomst (
+    forekomstId INTEGER,
+    togruteId INTEGER NOT NULL,
+    ukedagNr INTEGER NOT NULL,
+    ukeNr INTEGER NOT NULL,
+    aar INTEGER NOT NULL,
+
+    PRIMARY KEY (togruteId),
+
+    FOREIGN KEY (togruteId) REFERENCES togrute(togruteId)
+        ON UPDATE CASCADE
+        ON DELETE CASCADE,
+
+    FOREIGN KEY (ukedagNr) REFERENCES ukedag(ukedagNr)
+        ON UPDATE CASCADE
+        ON DELETE CASCADE
+);
+
+CREATE TABLE ukedag (
     togruteId INTEGER,
     ukedagNr INTEGER,
 
@@ -84,24 +91,19 @@ CREATE TABLE togrute (
         ON DELETE CASCADE
 );
 
-CREATE TABLE operator (
-    operatorId INTEGER PRIMARY KEY AUTOINCREMENT,
-    navn VARCHAR NOT NULL
-);
-
 CREATE TABLE banestrekning (
     banestrekningId INTEGER PRIMARY KEY AUTOINCREMENT,
-    navn VARCHAR NOT NULL,
+    navn TEXT NOT NULL,
     brukerDiesel BOOLEAN NOT NULL
 );
 
 
 CREATE TABLE stasjonPaaStrekning (
     banestrekningId INTEGER,
-    sekvensId INTEGER,
+    sekvensnr INTEGER, --NOT NULL????
     jernbanestasjonId INTEGER NOT NULL,
     
-    PRIMARY KEY (banestrekningId, sekvensId),
+    PRIMARY KEY (banestrekningId, sekvensnr),
     
     FOREIGN KEY (banestrekningId) REFERENCES banestrekning(banestrekningId)
         ON UPDATE CASCADE
@@ -148,6 +150,8 @@ CREATE TABLE vogn (
     vognId INTEGER PRIMARY KEY AUTOINCREMENT,
     vognModellId INTEGER NOT NULL,
     operatorId INTEGER NOT NULL,
+    togruteId INTEGER,
+    vognnr INTEGER,
 
     FOREIGN KEY (vognModellId) REFERENCES vognModell(vognModellId)
         ON UPDATE CASCADE
@@ -155,44 +159,22 @@ CREATE TABLE vogn (
 
     FOREIGN KEY (operatorId) REFERENCES operator(operatorId)
         ON UPDATE CASCADE
-        ON DELETE CASCADE
-);
-
-CREATE TABLE vognOppsett (
-    vognOppsettId INTEGER PRIMARY KEY AUTOINCREMENT,
-    togruteId INTEGER NOT NULL,
-    
-    FOREIGN KEY (togruteId) REFERENCES togrute(togruteId)
-        ON UPDATE CASCADE
-        ON DELETE CASCADE
-);
-
-CREATE TABLE vognOppsettVogn (
-    togruteId INTEGER,
-    vognOppsettId INTEGER,
-    vognId INTEGER,
-    vognNr INTEGER NOT NULL,
-
-    PRIMARY KEY (togruteId, vognOppsettId, vognId),
-    UNIQUE (togruteId, vognOppsettId, vognId, vognNr),
+        ON DELETE CASCADE,
 
     FOREIGN KEY (togruteId) REFERENCES togrute(togruteId)
         ON UPDATE CASCADE
-        ON DELETE CASCADE,
+        ON DELETE SET NULL
+);
 
-    FOREIGN KEY (vognOppsettId) REFERENCES vognOppsett(vognOppsettId)
-        ON UPDATE CASCADE
-        ON DELETE CASCADE,
-
-    FOREIGN KEY (vognId) REFERENCES vogn(vognId)
-        ON UPDATE CASCADE
-        ON DELETE CASCADE
+CREATE TABLE operator (
+    operatorId INTEGER PRIMARY KEY AUTOINCREMENT,
+    navn TEXT NOT NULL
 );
 
 CREATE TABLE stopperPaa (
     togruteId INTEGER,
     sekvensNr INTEGER,
-    tidspunkt TIME,
+    tidspunkt TIME NOT NULL,
 
     PRIMARY KEY (togruteId, sekvensNr),
 
@@ -268,38 +250,26 @@ INSERT INTO vogn (vognModellId) VALUES (1);
 INSERT INTO vogn (vognModellId) VALUES (2);
 INSERT INTO vogn (vognModellId) VALUES (1);
 
--- Vognoppsett
-INSERT INTO vognOppsett (togruteId) VALUES (1); -- Dagtog Trondheim til Bodø
-INSERT INTO vognOppsettVogn VALUES (1, 1, 1, 1);
-INSERT INTO vognOppsettVogn VALUES (1, 1, 2, 2);
-
-INSERT INTO vognOppsett (togruteId) VALUES (2); -- Nattog Trondheim til Bodø
-INSERT INTO vognOppsettVogn VALUES (2, 2, 3, 1);
-INSERT INTO vognOppsettVogn VALUES (2, 2, 4, 2);
-
-INSERT INTO vognOppsett (togruteId) VALUES (3); -- Morgentog Mo i Rana til Trondheim
-INSERT INTO vognOppsettVogn VALUES (3, 3, 5, 1);
-
 -- Ruteforekomster
 -- For togrute 1
-INSERT INTO togRuteForekomst VALUES (1, 1);
-INSERT INTO togRuteForekomst VALUES (1, 2);
-INSERT INTO togRuteForekomst VALUES (1, 3);
-INSERT INTO togRuteForekomst VALUES (1, 4);
-INSERT INTO togRuteForekomst VALUES (1, 5);
+INSERT INTO ukedag VALUES (1, 1);
+INSERT INTO ukedag VALUES (1, 2);
+INSERT INTO ukedag VALUES (1, 3);
+INSERT INTO ukedag VALUES (1, 4);
+INSERT INTO ukedag VALUES (1, 5);
 
 -- For togrute 2
-INSERT INTO togRuteForekomst VALUES (2, 1);
-INSERT INTO togRuteForekomst VALUES (2, 2);
-INSERT INTO togRuteForekomst VALUES (2, 3);
-INSERT INTO togRuteForekomst VALUES (2, 4);
-INSERT INTO togRuteForekomst VALUES (2, 5);
-INSERT INTO togRuteForekomst VALUES (2, 6);
-INSERT INTO togRuteForekomst VALUES (2, 7);
+INSERT INTO ukedag VALUES (2, 1);
+INSERT INTO ukedag VALUES (2, 2);
+INSERT INTO ukedag VALUES (2, 3);
+INSERT INTO ukedag VALUES (2, 4);
+INSERT INTO ukedag VALUES (2, 5);
+INSERT INTO ukedag VALUES (2, 6);
+INSERT INTO ukedag VALUES (2, 7);
 
 -- For togrute 3
-INSERT INTO togRuteForekomst VALUES (3, 1);
-INSERT INTO togRuteForekomst VALUES (3, 2);
-INSERT INTO togRuteForekomst VALUES (3, 3);
-INSERT INTO togRuteForekomst VALUES (3, 4);
-INSERT INTO togRuteForekomst VALUES (3, 5);
+INSERT INTO ukedag VALUES (3, 1);
+INSERT INTO ukedag VALUES (3, 2);
+INSERT INTO ukedag VALUES (3, 3);
+INSERT INTO ukedag VALUES (3, 4);
+INSERT INTO ukedag VALUES (3, 5);
