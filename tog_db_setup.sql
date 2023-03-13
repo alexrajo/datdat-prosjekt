@@ -140,11 +140,18 @@ CREATE TABLE delstrekning (
 
 CREATE TABLE vognModell (
     vognModellId INTEGER PRIMARY KEY AUTOINCREMENT,
-    modellNavn TEXT NOT NULL,
-    erSittevogn BOOLEAN NOT NULL,
-    stolrader INTEGER,
-    seterPerRad INTEGER,
-    kupeer INTEGER
+    modellNavn TEXT NOT NULL
+);
+
+CREATE TABLE sittevognModell (
+    vognModellId INTEGER PRIMARY KEY,
+    stolrader INTEGER NOT NULL,
+    seterPerRad INTEGER NOT NULL
+);
+
+CREATE TABLE sovevognModell (
+    vognModellId INTEGER PRIMARY KEY,
+    kupeer INTEGER NOT NULL
 );
 
 CREATE TABLE vogn (
@@ -243,8 +250,11 @@ INSERT INTO stopperPaa VALUES (3, 2, "12:31:00");
 INSERT INTO stopperPaa VALUES (3, 1, "14:13:00");
 
 -- Vognmodeller
-INSERT INTO vognModell (modellNavn, erSittevogn, stolrader, seterPerRad, kupeer) VALUES ("SJ-sittevogn-1", true, 3, 4, NULL);
-INSERT INTO vognModell (modellNavn, erSittevogn, stolrader, seterPerRad, kupeer) VALUES ("SJ-sovevogn-1", false, NULL, NULL, 4);
+INSERT INTO vognModell (modellNavn) VALUES ("SJ-sittevogn-1");
+INSERT INTO sittevognModell (vognModellId, stolrader, seterPerRad) VALUES (1, 3, 4);
+
+INSERT INTO vognModell (modellNavn) VALUES ("SJ-sovevogn-1");
+INSERT INTO sovevognModell (vognModellId, kupeer) VALUES (2, 4);
 
 -- Vogner
     --dagtog
