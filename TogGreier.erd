@@ -141,7 +141,7 @@
             <attribute name="vognNr" type=""/>
         </attributes>
     </diamond>
-    <diamond id="100" is_weak="true" name="" x="541" y="451">
+    <diamond id="100" is_weak="true" name="StopperPå" x="541" y="451">
         <attributes/>
     </diamond>
     <diamond id="103" is_weak="true" name="ErPå" x="756" y="541">
