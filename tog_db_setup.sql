@@ -1,30 +1,33 @@
 CREATE TABLE kunde (
-    kundenummer INTEGER PRIMARY KEY,
-    navn TEXT NOT NULL,
+    kundenummer INTEGER PRIMARY KEY AUTOINCREMENT,
+    fornavnnavn TEXT NOT NULL,
+    etternavn TEXT NOT NULL,
     email TEXT NOT NULL,
     mobilnummer INTEGER NOT NULL
 );
 
 CREATE TABLE kundeOrdre (
-    ordreNr INTEGER PRIMARY KEY,
+    ordreNr INTEGER PRIMARY KEY AUTOINCREMENT,
     kjopstidspunkt DATETIME NOT NULL,
-    kundenummer INTEGER,
+    kundenummer INTEGER NOT NULL,
+    forekomstId INTEGER,
 
     FOREIGN KEY (kundenummer) REFERENCES kunde(kundenummer)
         ON UPDATE CASCADE
-        ON DELETE CASCADE
+        ON DELETE CASCADE,
+
+    FOREIGN KEY (forekomstId) REFERENCES togruteforekomst(forekomstId)
+        ON UPDATE CASCADE
+        ON DELETE SET NULL
 );
 
 CREATE TABLE billett (
-    billettNr INTEGER,
-    ordreNr INTEGER,
+    billettNr INTEGER PRIMARY KEY AUTOINCREMENT,
+    ordreNr INTEGER NOT NULL,
     vognId INTEGER NOT NULL,
     plassNr INTEGER NOT NULL,
     sekvensNrStart INTEGER NOT NULL,
     sekvensNrEnde INTEGER NOT NULL,
-    forekomstId INTEGER NOT NULL,
-
-    PRIMARY KEY(billettNr),
 
     FOREIGN KEY (ordreNr) REFERENCES kundeOrdre(ordreNr)
         ON UPDATE CASCADE
@@ -32,29 +35,25 @@ CREATE TABLE billett (
 
     FOREIGN KEY (vognId) REFERENCES vogn(vognId)
         ON UPDATE CASCADE
-        ON DELETE CASCADE,
+        ON DELETE SET NULL,
 
-    FOREIGN KEY (sekvensNrStart) REFERENCES stasjonPaaStrekning(sekvensNr)
+    FOREIGN KEY (sekvensNrStart) REFERENCES stopp(sekvensNr)
         ON UPDATE CASCADE
-        ON DELETE CASCADE,
+        ON DELETE SET NULL,
 
-    FOREIGN KEY (sekvensNrEnde) REFERENCES stasjonPaaStrekning(sekvensNr)
-        ON UPDATE CASCADE
-        ON DELETE CASCADE,
-        
-    FOREIGN KEY (forekomstId) REFERENCES togruteforekomst(forekomstId)
+    FOREIGN KEY (sekvensNrEnde) REFERENCES stopp(sekvensNr)
         ON UPDATE CASCADE
         ON DELETE SET NULL
 );
 
 CREATE TABLE togruteforekomst (
-    forekomstId INTEGER,
+    forekomstId INTEGER PRIMARY KEY AUTOINCREMENT,
     togruteId INTEGER NOT NULL,
     ukedagNr INTEGER NOT NULL,
     ukeNr INTEGER NOT NULL,
     aar INTEGER NOT NULL,
 
-    PRIMARY KEY (togruteId),
+    UNIQUE(togruteId, ukedagNr, ukeNr, aar),
 
     FOREIGN KEY (togruteId) REFERENCES togrute(togruteId)
         ON UPDATE CASCADE
@@ -157,11 +156,11 @@ CREATE TABLE sovevognModell (
 CREATE TABLE vogn (
     vognId INTEGER PRIMARY KEY AUTOINCREMENT,
     vognModellId INTEGER NOT NULL,
-    operatorId INTEGER NOT NULL,
+    operatorId INTEGER,
     togruteId INTEGER,
     vognnr INTEGER,
 
-    UNIQUE (togruteId, vognnr),
+    UNIQUE (togruteId, vognnr), -- To vogner skal ikke kunne ha samme nummer i rekka av vogner
 
     FOREIGN KEY (vognModellId) REFERENCES vognModell(vognModellId)
         ON UPDATE CASCADE
@@ -169,7 +168,7 @@ CREATE TABLE vogn (
 
     FOREIGN KEY (operatorId) REFERENCES operator(operatorId)
         ON UPDATE CASCADE
-        ON DELETE CASCADE,
+        ON DELETE SET NULL,
 
     FOREIGN KEY (togruteId) REFERENCES togrute(togruteId)
         ON UPDATE CASCADE
@@ -181,7 +180,7 @@ CREATE TABLE operator (
     navn TEXT NOT NULL
 );
 
-CREATE TABLE stopperPaa (
+CREATE TABLE stopp (
     togruteId INTEGER,
     sekvensnr INTEGER,
     tidspunkt TIME NOT NULL,
@@ -228,26 +227,26 @@ INSERT INTO togrute (operatorId, banestrekningId, rutenavn) VALUES (1, 1, "Natto
 INSERT INTO togrute (operatorId, banestrekningId, rutenavn, motHovedretning) VALUES (1, 1, "Morgentog fra Mo i Rana til Trondheim", 1);
 
 -- Togrute 1
-INSERT INTO stopperPaa VALUES (1, 1, "07:49:00");
-INSERT INTO stopperPaa VALUES (1, 2, "09:51:00");
-INSERT INTO stopperPaa VALUES (1, 3, "13:20:00");
-INSERT INTO stopperPaa VALUES (1, 4, "14:31:00");
-INSERT INTO stopperPaa VALUES (1, 5, "16:49:00");
-INSERT INTO stopperPaa VALUES (1, 6, "17:34:00");
+INSERT INTO stopp VALUES (1, 1, "07:49:00");
+INSERT INTO stopp VALUES (1, 2, "09:51:00");
+INSERT INTO stopp VALUES (1, 3, "13:20:00");
+INSERT INTO stopp VALUES (1, 4, "14:31:00");
+INSERT INTO stopp VALUES (1, 5, "16:49:00");
+INSERT INTO stopp VALUES (1, 6, "17:34:00");
 
 -- Togrute 2
-INSERT INTO stopperPaa VALUES (2, 1, "23:05:00");
-INSERT INTO stopperPaa VALUES (2, 2, "00:57:00");
-INSERT INTO stopperPaa VALUES (2, 3, "04:41:00");
-INSERT INTO stopperPaa VALUES (2, 4, "05:55:00");
-INSERT INTO stopperPaa VALUES (2, 5, "08:19:00");
-INSERT INTO stopperPaa VALUES (2, 6, "09:05:00");
+INSERT INTO stopp VALUES (2, 1, "23:05:00");
+INSERT INTO stopp VALUES (2, 2, "00:57:00");
+INSERT INTO stopp VALUES (2, 3, "04:41:00");
+INSERT INTO stopp VALUES (2, 4, "05:55:00");
+INSERT INTO stopp VALUES (2, 5, "08:19:00");
+INSERT INTO stopp VALUES (2, 6, "09:05:00");
 
 -- Togrute 3
-INSERT INTO stopperPaa VALUES (3, 4, "08:11:00");
-INSERT INTO stopperPaa VALUES (3, 3, "09:14:00");
-INSERT INTO stopperPaa VALUES (3, 2, "12:31:00");
-INSERT INTO stopperPaa VALUES (3, 1, "14:13:00");
+INSERT INTO stopp VALUES (3, 4, "08:11:00");
+INSERT INTO stopp VALUES (3, 3, "09:14:00");
+INSERT INTO stopp VALUES (3, 2, "12:31:00");
+INSERT INTO stopp VALUES (3, 1, "14:13:00");
 
 -- Vognmodeller
 INSERT INTO vognModell (modellNavn) VALUES ("SJ-sittevogn-1");
