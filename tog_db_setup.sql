@@ -138,22 +138,22 @@ CREATE TABLE delstrekning (
 CREATE TABLE vognModell (
     vognModellId INTEGER PRIMARY KEY AUTOINCREMENT,
     modellNavn TEXT NOT NULL,
-    operatorId INTEGER NOT NULL,
     erSittevogn BOOLEAN NOT NULL,
     stolrader INTEGER,
     seterPerRad INTEGER,
-    kupeer INTEGER,
-    
-    FOREIGN KEY (operatorId) REFERENCES operator(operatorId)
-        ON UPDATE CASCADE
-        ON DELETE CASCADE
+    kupeer INTEGER
 );
 
 CREATE TABLE vogn (
     vognId INTEGER PRIMARY KEY AUTOINCREMENT,
     vognModellId INTEGER NOT NULL,
+    operatorId INTEGER NOT NULL,
 
     FOREIGN KEY (vognModellId) REFERENCES vognModell(vognModellId)
+        ON UPDATE CASCADE
+        ON DELETE CASCADE,
+
+    FOREIGN KEY (operatorId) REFERENCES operator(operatorId)
         ON UPDATE CASCADE
         ON DELETE CASCADE
 );
