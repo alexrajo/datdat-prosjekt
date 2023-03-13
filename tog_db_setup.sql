@@ -80,6 +80,7 @@ CREATE TABLE togrute (
     togruteId INTEGER PRIMARY KEY AUTOINCREMENT,
     operatorId INTEGER NOT NULL,
     banestrekningId INTEGER NOT NULL,
+    motHovedretning BOOLEAN DEFAULT 0 NOT NULL,
     rutenavn TEXT,
     
     FOREIGN KEY (operatorId) REFERENCES operator(operatorId)
@@ -100,7 +101,7 @@ CREATE TABLE banestrekning (
 
 CREATE TABLE stasjonPaaStrekning (
     banestrekningId INTEGER,
-    sekvensnr INTEGER, --NOT NULL????
+    sekvensnr INTEGER,
     jernbanestasjonId INTEGER NOT NULL,
     
     PRIMARY KEY (banestrekningId, sekvensnr),
@@ -153,6 +154,8 @@ CREATE TABLE vogn (
     togruteId INTEGER,
     vognnr INTEGER,
 
+    UNIQUE (togruteId, vognnr),
+
     FOREIGN KEY (vognModellId) REFERENCES vognModell(vognModellId)
         ON UPDATE CASCADE
         ON DELETE CASCADE,
@@ -173,7 +176,7 @@ CREATE TABLE operator (
 
 CREATE TABLE stopperPaa (
     togruteId INTEGER,
-    sekvensNr INTEGER,
+    sekvensnr INTEGER,
     tidspunkt TIME NOT NULL,
 
     PRIMARY KEY (togruteId, sekvensNr),
@@ -182,7 +185,7 @@ CREATE TABLE stopperPaa (
         ON UPDATE CASCADE
         ON DELETE CASCADE,
 
-    FOREIGN KEY (sekvensNr) REFERENCES stasjonPaaStrekning(sekvensNr)
+    FOREIGN KEY (sekvensnr) REFERENCES stasjonPaaStrekning(sekvensnr)
         ON UPDATE CASCADE
         ON DELETE CASCADE
 );
@@ -215,7 +218,7 @@ INSERT INTO operator (navn) VALUES ("SJ");
 
 INSERT INTO togrute (operatorId, banestrekningId, rutenavn) VALUES (1, 1, "Dagtog fra Trondheim til Bodø");
 INSERT INTO togrute (operatorId, banestrekningId, rutenavn) VALUES (1, 1, "Nattog fra Trondheim til Bodø");
-INSERT INTO togrute (operatorId, banestrekningId, rutenavn) VALUES (1, 1, "Morgentog fra Mo i Rana til Trondheim");
+INSERT INTO togrute (operatorId, banestrekningId, rutenavn, motHovedretning) VALUES (1, 1, "Morgentog fra Mo i Rana til Trondheim", 1);
 
 -- Togrute 1
 INSERT INTO stopperPaa VALUES (1, 1, "07:49:00");
@@ -240,15 +243,18 @@ INSERT INTO stopperPaa VALUES (3, 2, "12:31:00");
 INSERT INTO stopperPaa VALUES (3, 1, "14:13:00");
 
 -- Vognmodeller
-INSERT INTO vognModell (modellNavn, operatorId, erSittevogn, stolrader, seterPerRad, kupeer) VALUES ("SJ-sittevogn-1", 1, true, 3, 4, NULL);
-INSERT INTO vognModell (modellNavn, operatorId, erSittevogn, stolrader, seterPerRad, kupeer) VALUES ("SJ-sovevogn-1", 1, false, NULL, NULL, 4);
+INSERT INTO vognModell (modellNavn, erSittevogn, stolrader, seterPerRad, kupeer) VALUES ("SJ-sittevogn-1", true, 3, 4, NULL);
+INSERT INTO vognModell (modellNavn, erSittevogn, stolrader, seterPerRad, kupeer) VALUES ("SJ-sovevogn-1", false, NULL, NULL, 4);
 
 -- Vogner
-INSERT INTO vogn (vognModellId) VALUES (1);
-INSERT INTO vogn (vognModellId) VALUES (1);
-INSERT INTO vogn (vognModellId) VALUES (1);
-INSERT INTO vogn (vognModellId) VALUES (2);
-INSERT INTO vogn (vognModellId) VALUES (1);
+    --dagtog
+INSERT INTO vogn (vognModellId, operatorId, togruteId, vognnr) VALUES (1, 1, 1, 1);
+INSERT INTO vogn (vognModellId, operatorId, togruteId, vognnr) VALUES (1, 1, 1, 2);
+    --nattog
+INSERT INTO vogn (vognModellId, operatorId, togruteId, vognnr) VALUES (1, 1, 2, 1);
+INSERT INTO vogn (vognModellId, operatorId, togruteId, vognnr) VALUES (2, 1, 2, 2);
+    --morgentog
+INSERT INTO vogn (vognModellId, operatorId, togruteId, vognnr) VALUES (1, 1, 3, 1);
 
 -- Ruteforekomster
 -- For togrute 1
