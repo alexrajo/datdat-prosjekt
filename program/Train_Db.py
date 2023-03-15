@@ -149,20 +149,17 @@ class Train_Db_Manager:
         """
         print(pd.read_sql_query("""
             SELECT 
-            (
-                togrute.togruteId, 
-                operatorId, 
-                banestrekningId, 
-                motHovedretning, 
-                rutenavn
-            )
+            togrute.togruteId, 
+            operatorId, 
+            banestrekningId, 
+            rutenavn
             FROM togrute
             INNER JOIN ukedag USING (togruteId) 
             INNER JOIN stopp USING (togruteId)
             INNER JOIN stasjonPaaStrekning USING (banestrekningId, sekvensNr) 
             WHERE ukedag.ukedagNr = {ukedagNr} 
-            AND jernbanestasjonId = {jernbanestasjonId}
-        """.format(ukedagNr=weekday_n, jernbanestasjonId=station_id)))
+            AND jernbanestasjonId = {jernbanestasjonId};
+        """.format(ukedagNr=weekday_n, jernbanestasjonId=station_id), self.db_connection))
 
     def register_user(
             self, first_name: str, surname: str, email: str, phone_number: str):

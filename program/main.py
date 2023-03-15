@@ -21,9 +21,13 @@ while True:
     # Oppgave c), få ut alle togruter for en gitt jernbanestasjon på en gitt ukedag
     # Tar inn en stasjon og en ukedag
     if argument_list[0] == "hent_togruter_for_stasjon":
-        print(db_manager.get_train_routes(
-            int(argument_list[1]),
-            int(argument_list[2])))
+        if len(argument_list) != 3:
+            print(
+                "Bruk: hent_togruter_for_stasjon jernbanestasjonId ukedagNr (1: mandag - 7: søndag)")
+        else:
+            db_manager.get_train_routes(
+                int(argument_list[1]),
+                int(argument_list[2]))
 
     # Oppgave d), togruter mellom start-stasjon og slutt-stasjon
     # Returnere alle tider samme dag og neste dag
