@@ -7,7 +7,7 @@ dir_path = os.path.dirname(os.path.realpath(__file__))
 db_manager = tdb.Train_Db_Manager(dir_path + "/../data/tog.db")
 
 
-print("TrainDB CLI is ready to be used. Type help for information.")
+print("TogDB CLI er klar for bruk. Skriv 'hjelp' / 'h' for mer informasjon.")
 while True:
     # Venter på en kommando fra input
     command = input('$ ')
@@ -70,13 +70,13 @@ while True:
 
     elif argument_list[0] in ["help", "h", "", "hjelp"]:
         print("""
-TrainDB CLI Hjelp
+TogDB CLI Hjelp
 #################
 
 slutt,
 exit,
 q,
-quit - avslutter TrainDB CLI
+quit - avslutter TogDB CLI
 
 help,
 h,
@@ -100,7 +100,7 @@ hent_ordre - henter ordrer i fremtiden for en bruker.
 """)
 
     else:
-        print("Command not recognized.")
+        print("Kommando ikke gjenkjent.")
 
 
 del db_manager
