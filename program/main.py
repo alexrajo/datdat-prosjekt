@@ -2,6 +2,17 @@ import Train_Db as tdb
 from utils import *
 import os
 import datetime
+import readline
+
+COMMANDS = ["hent_togruter_for_stasjon","hent_ruter_mellom_stasjoner", "registrer_bruker", "finn_ledige_billetter", "kjop_billett","hent_ordre"]
+
+def completer(text, state):
+    options = [i for i in commands if i.startswith(text)]
+    if state < len(options):
+        return options[state]
+    else:
+        return None
+
 
 dir_path = os.path.dirname(os.path.realpath(__file__))
 db_manager = tdb.Train_Db_Manager(dir_path + "/../data/tog.db")
@@ -9,6 +20,8 @@ db_manager = tdb.Train_Db_Manager(dir_path + "/../data/tog.db")
 
 print("TogDB CLI er klar for bruk. Skriv 'hjelp' / 'h' for mer informasjon.")
 while True:
+    readline.parse_and_bind("tab: complete")
+    readline.set_completer(completer)
     # Venter på en kommando fra input
     command = input('$ ')
 
@@ -50,7 +63,16 @@ while True:
 
     # Oppgave e) registrer bruker
     elif argument_list[0] == "registrer_bruker":
-        db_manager.register_user()
+        if len(argument_list) != 4:
+            print(
+                "Bruk: registrer_bruker fornavn etternavn email phone_number")
+        else:
+            db_manager.register_user(
+                argument_list[1],
+                argument_list[2],
+                argument_list[3],
+                argument_list[4],
+            )
 
     # Oppgave g) finn ledige billetter og kjøp
     elif argument_list[0] == "finn_ledige_billetter":
