@@ -4,7 +4,7 @@ import os
 from sys import platform
 import datetime
 
-isRunningOnMacos = platform == "darwin"
+isRunningOnMacos = platform.startswith("darwin")
 if isRunningOnMacos: # darwin = macos
     import readline
 
