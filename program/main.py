@@ -88,7 +88,13 @@ while True:
 
     # Oppgave h) info om tidligere kjøp for fremtidige reiser
     elif argument_list[0] == "hent_ordre":
-        db_manager.get_orders()
+        if len(argument_list) != 2:
+            print(
+                "Bruk: hent_ordre kundenummer")
+        else:
+            db_manager.get_orders(
+                argument_list[1],
+            )
 
     # exit
     elif argument_list[0] in ["exit", "q", "quit", "slutt"]:

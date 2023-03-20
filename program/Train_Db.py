@@ -2,7 +2,6 @@ from sqlite3 import Cursor, Connection, connect
 from datetime import datetime
 import pandas as pd
 
-
 class Train_Db_Manager:
     """Class with methods for managing the train database.
 
@@ -59,7 +58,32 @@ class Train_Db_Manager:
 
             list<(<attribute>: <type>,...)>.
         """
-        return NotImplemented
+
+        current_year, current_week, current_weekday = datetime.today().isocalendar()
+
+        print(pd.read_sql_query("""
+        SELECT 
+            ordreNr AS 'OrdreNr', 
+            kjopstidspunkt AS 'Kjøpstidpunkt', 
+            tf.aar AS 'År', 
+            tf.ukeNr as Uke,
+            tf.ukedagNr AS Ukedag
+        FROM kundeOrdre 
+        INNER JOIN togruteforekomst AS tf USING (forekomstId) 
+        WHERE kundenummer = {input_kundenummer}
+        AND 
+            aar > {current_aar}
+            OR (
+            aar = {current_aar} AND ukeNr > {current_ukeNr}
+            ) OR (
+            aar = {current_aar} AND ukeNr = {current_ukeNr} AND ukedagNr > {current_ukedagNr}
+            );
+        """.format(
+            input_kundenummer=customer_n, 
+            current_aar=current_year, 
+            current_ukeNr=current_week, 
+            current_ukedagNr=current_weekday
+        ), self.db_connection))
 
     def get_route_by_stations(
         self, start_station_id: int, end_station_id: int,
@@ -244,3 +268,4 @@ class Train_Db_Manager:
             ))
         self.db_connection.commit()
         return (res_ticket.lastrowid, res_order.lastrowid)
+
