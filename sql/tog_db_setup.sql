@@ -198,12 +198,12 @@ CREATE TABLE stopp (
 
 
 -- Insert data into database --
-INSERT INTO jernbanestasjon (navn, moh) VALUES ("Trondheim", 5.1);
-INSERT INTO jernbanestasjon (navn, moh) VALUES ("Steinkjer", 3.6);
-INSERT INTO jernbanestasjon (navn, moh) VALUES ("Mosjøen", 6.8);
-INSERT INTO jernbanestasjon (navn, moh) VALUES ("Mo i rana", 3.5);
-INSERT INTO jernbanestasjon (navn, moh) VALUES ("Fauske", 34);
-INSERT INTO jernbanestasjon (navn, moh) VALUES ("Bodø", 4.1);
+INSERT INTO jernbanestasjon (navn, moh) VALUES ('Trondheim', 5.1);
+INSERT INTO jernbanestasjon (navn, moh) VALUES ('Steinkjer', 3.6);
+INSERT INTO jernbanestasjon (navn, moh) VALUES ('Mosjøen', 6.8);
+INSERT INTO jernbanestasjon (navn, moh) VALUES ('Mo i rana', 3.5);
+INSERT INTO jernbanestasjon (navn, moh) VALUES ('Fauske', 34);
+INSERT INTO jernbanestasjon (navn, moh) VALUES ('Bodø', 4.1);
 
 INSERT INTO delstrekning VALUES (1, 2, 120, true);
 INSERT INTO delstrekning VALUES (2, 3, 280, false);
@@ -211,7 +211,7 @@ INSERT INTO delstrekning VALUES (3, 4, 90, false);
 INSERT INTO delstrekning VALUES (4, 5, 170, false);
 INSERT INTO delstrekning VALUES (5, 6, 60, false);
 
-INSERT INTO banestrekning (navn, brukerDiesel) VALUES ("Nordlandsbanen", true);
+INSERT INTO banestrekning (navn, brukerDiesel) VALUES ('Nordlandsbanen', true);
 
 INSERT INTO stasjonPaaStrekning VALUES (1, 1, 1);
 INSERT INTO stasjonPaaStrekning VALUES (1, 2, 2);
@@ -220,39 +220,39 @@ INSERT INTO stasjonPaaStrekning VALUES (1, 4, 4);
 INSERT INTO stasjonPaaStrekning VALUES (1, 5, 5);
 INSERT INTO stasjonPaaStrekning VALUES (1, 6, 6);
 
-INSERT INTO operator (navn) VALUES ("SJ");
+INSERT INTO operator (navn) VALUES ('SJ');
 
-INSERT INTO togrute (operatorId, banestrekningId, rutenavn) VALUES (1, 1, "Dagtog fra Trondheim til Bodø");
-INSERT INTO togrute (operatorId, banestrekningId, rutenavn) VALUES (1, 1, "Nattog fra Trondheim til Bodø");
-INSERT INTO togrute (operatorId, banestrekningId, rutenavn, motHovedretning) VALUES (1, 1, "Morgentog fra Mo i Rana til Trondheim", 1);
+INSERT INTO togrute (operatorId, banestrekningId, rutenavn) VALUES (1, 1, 'Dagtog fra Trondheim til Bodø');
+INSERT INTO togrute (operatorId, banestrekningId, rutenavn) VALUES (1, 1, 'Nattog fra Trondheim til Bodø');
+INSERT INTO togrute (operatorId, banestrekningId, rutenavn, motHovedretning) VALUES (1, 1, 'Morgentog fra Mo i Rana til Trondheim', 1);
 
 -- Togrute 1
-INSERT INTO stopp VALUES (1, 1, "07:49:00");
-INSERT INTO stopp VALUES (1, 2, "09:51:00");
-INSERT INTO stopp VALUES (1, 3, "13:20:00");
-INSERT INTO stopp VALUES (1, 4, "14:31:00");
-INSERT INTO stopp VALUES (1, 5, "16:49:00");
-INSERT INTO stopp VALUES (1, 6, "17:34:00");
+INSERT INTO stopp VALUES (1, 1, '07:49:00');
+INSERT INTO stopp VALUES (1, 2, '09:51:00');
+INSERT INTO stopp VALUES (1, 3, '13:20:00');
+INSERT INTO stopp VALUES (1, 4, '14:31:00');
+INSERT INTO stopp VALUES (1, 5, '16:49:00');
+INSERT INTO stopp VALUES (1, 6, '17:34:00');
 
 -- Togrute 2
-INSERT INTO stopp VALUES (2, 1, "23:05:00");
-INSERT INTO stopp VALUES (2, 2, "00:57:00");
-INSERT INTO stopp VALUES (2, 3, "04:41:00");
-INSERT INTO stopp VALUES (2, 4, "05:55:00");
-INSERT INTO stopp VALUES (2, 5, "08:19:00");
-INSERT INTO stopp VALUES (2, 6, "09:05:00");
+INSERT INTO stopp VALUES (2, 1, '23:05:00');
+INSERT INTO stopp VALUES (2, 2, '00:57:00');
+INSERT INTO stopp VALUES (2, 3, '04:41:00');
+INSERT INTO stopp VALUES (2, 4, '05:55:00');
+INSERT INTO stopp VALUES (2, 5, '08:19:00');
+INSERT INTO stopp VALUES (2, 6, '09:05:00');
 
 -- Togrute 3
-INSERT INTO stopp VALUES (3, 4, "08:11:00");
-INSERT INTO stopp VALUES (3, 3, "09:14:00");
-INSERT INTO stopp VALUES (3, 2, "12:31:00");
-INSERT INTO stopp VALUES (3, 1, "14:13:00");
+INSERT INTO stopp VALUES (3, 4, '08:11:00');
+INSERT INTO stopp VALUES (3, 3, '09:14:00');
+INSERT INTO stopp VALUES (3, 2, '12:31:00');
+INSERT INTO stopp VALUES (3, 1, '14:13:00');
 
 -- Vognmodeller
-INSERT INTO vognModell (modellNavn) VALUES ("SJ-sittevogn-1");
+INSERT INTO vognModell (modellNavn) VALUES ('SJ-sittevogn-1');
 INSERT INTO sittevognModell (vognModellId, stolrader, seterPerRad) VALUES (1, 3, 4);
 
-INSERT INTO vognModell (modellNavn) VALUES ("SJ-sovevogn-1");
+INSERT INTO vognModell (modellNavn) VALUES ('SJ-sovevogn-1');
 INSERT INTO sovevognModell (vognModellId, kupeer) VALUES (2, 4);
 
 -- Vogner

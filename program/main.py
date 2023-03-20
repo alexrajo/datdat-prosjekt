@@ -1,8 +1,12 @@
 import Train_Db as tdb
 from utils import *
 import os
+from sys import platform
 import datetime
-import readline
+
+isRunningOnMacos = platform == "darwin"
+if isRunningOnMacos: # darwin = macos
+    import readline
 
 COMMANDS = ["hent_togruter_for_stasjon","hent_ruter_mellom_stasjoner", "registrer_bruker", "finn_ledige_billetter", "kjop_billett","hent_ordre"]
 
@@ -20,8 +24,9 @@ db_manager = tdb.Train_Db_Manager(dir_path + "/../data/tog.db")
 
 print("TogDB CLI er klar for bruk. Skriv 'hjelp' / 'h' for mer informasjon.")
 while True:
-    readline.parse_and_bind("tab: complete")
-    readline.set_completer(completer)
+    if isRunningOnMacos:
+        readline.parse_and_bind("tab: complete")
+        readline.set_completer(completer)
     # Venter på en kommando fra input
     command = input('$ ')
 
@@ -87,7 +92,7 @@ while True:
 
     # exit
     elif argument_list[0] in ["exit", "q", "quit", "slutt"]:
-        print("Exiting traindb cli.")
+        print("Stopper TogDB CLI...")
         break
 
     elif argument_list[0] in ["help", "h", "", "hjelp"]:

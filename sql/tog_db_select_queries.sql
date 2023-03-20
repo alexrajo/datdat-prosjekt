@@ -1,4 +1,4 @@
-SELECT "Togrute 1 - Tidspunkter og stasjoner på stopp" AS "";
+SELECT 'Togrute 1 - Tidspunkter og stasjoner på stopp' AS '';
 SELECT tidspunkt, jernbanestasjon.navn AS stasjon, motHovedretning FROM togrute 
     INNER JOIN stopp USING(togruteId) 
     INNER JOIN stasjonPaaStrekning USING(sekvensnr, banestrekningId) 
@@ -8,7 +8,7 @@ SELECT tidspunkt, jernbanestasjon.navn AS stasjon, motHovedretning FROM togrute
         CASE WHEN motHovedretning=0 THEN stopp.sekvensnr END ASC,
         CASE WHEN motHovedretning=1 THEN stopp.sekvensnr END DESC;
 
-SELECT "Togrute 2 - Tidspunkter og stasjoner på stopp" AS "";
+SELECT 'Togrute 2 - Tidspunkter og stasjoner på stopp' AS '';
 SELECT tidspunkt, jernbanestasjon.navn AS stasjon, motHovedretning FROM togrute 
     INNER JOIN stopp USING(togruteId) 
     INNER JOIN stasjonPaaStrekning USING(sekvensnr, banestrekningId) 
@@ -18,7 +18,7 @@ SELECT tidspunkt, jernbanestasjon.navn AS stasjon, motHovedretning FROM togrute
         CASE WHEN motHovedretning=0 THEN stopp.sekvensnr END ASC,
         CASE WHEN motHovedretning=1 THEN stopp.sekvensnr END DESC;
 
-SELECT "Togrute 3 - Tidspunkter og stasjoner på stopp" AS "";
+SELECT 'Togrute 3 - Tidspunkter og stasjoner på stopp' AS '';
 SELECT tidspunkt, jernbanestasjon.navn AS stasjon, motHovedretning FROM togrute 
     INNER JOIN stopp USING(togruteId) 
     INNER JOIN stasjonPaaStrekning USING(sekvensnr, banestrekningId) 
@@ -28,7 +28,7 @@ SELECT tidspunkt, jernbanestasjon.navn AS stasjon, motHovedretning FROM togrute
         CASE WHEN motHovedretning=0 THEN stopp.sekvensnr END ASC,
         CASE WHEN motHovedretning=1 THEN stopp.sekvensnr END DESC;
 
--- SELECT "Togruter mellom to stopp" AS "";
+-- SELECT 'Togruter mellom to stopp' AS '';
 -- SELECT togruteid, rutenavn, operatorId, banestrekningId, motHovedretning, tidspunkt AS klokkeslett, ukedagNr, ukeNr, aar FROM togrute 
 -- INNER JOIN stopp AS startstopp USING (togruteId)
 -- INNER JOIN stasjonPaaStrekning USING (banestrekningId, sekvensNr)
