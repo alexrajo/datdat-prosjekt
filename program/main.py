@@ -68,7 +68,7 @@ while True:
 
     # Oppgave e) registrer bruker
     elif argument_list[0] == "registrer_bruker":
-        if len(argument_list) != 4:
+        if len(argument_list) != 5:
             print(
                 "Bruk: registrer_bruker fornavn etternavn email phone_number")
         else:
@@ -92,7 +92,7 @@ while True:
 
     # exit
     elif argument_list[0] in ["exit", "q", "quit", "slutt"]:
-        print("Stopper TogDB CLI...")
+        print("Avslutter TogDB CLI...")
         break
 
     elif argument_list[0] in ["help", "h", "", "hjelp"]:

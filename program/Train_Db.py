@@ -149,9 +149,7 @@ class Train_Db_Manager:
         """
         print(pd.read_sql_query("""
             SELECT 
-            togrute.togruteId, 
-            operatorId, 
-            banestrekningId, 
+            togrute.togruteId,  
             rutenavn
             FROM togrute
             INNER JOIN ukedag USING (togruteId) 
@@ -180,7 +178,7 @@ class Train_Db_Manager:
 
         res = self.execute("""
         INSERT INTO kunde(fornavn, etternavn, email, mobilnummer)
-        VALUES ({first_name},{surname},{email},{phone_number});
+        VALUES ('{first_name}','{surname}','{email}',{phone_number});
         """.format(
             first_name=first_name,
             surname=surname,
