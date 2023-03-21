@@ -8,7 +8,7 @@ CREATE TABLE kunde (
 
 CREATE TABLE kundeOrdre (
     ordreNr INTEGER PRIMARY KEY AUTOINCREMENT,
-    kjopstidspunkt DATETIME NOT NULL,
+    kjopstidspunkt DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
     kundenummer INTEGER NOT NULL,
     forekomstId INTEGER,
 
@@ -290,7 +290,7 @@ INSERT INTO ukedag VALUES (3, 4);
 INSERT INTO ukedag VALUES (3, 5);
 
 
--- Forekomster 3. og 4. april 2023
+-- Forekomster (1. dag i uke 14 2023 = 3. april 2023)
 -- Togrute 1
 INSERT INTO togruteforekomst (togruteId, ukedagNr, ukeNr, aar) VALUES (1, 1, 14, 2023);
 INSERT INTO togruteforekomst (togruteId, ukedagNr, ukeNr, aar) VALUES (1, 2, 14, 2023);
@@ -299,6 +299,18 @@ INSERT INTO togruteforekomst (togruteId, ukedagNr, ukeNr, aar) VALUES (2, 1, 14,
 INSERT INTO togruteforekomst (togruteId, ukedagNr, ukeNr, aar) VALUES (2, 2, 14, 2023);
 INSERT INTO togruteforekomst (togruteId, ukedagNr, ukeNr, aar) VALUES (2, 7, 14, 2023);
 INSERT INTO togruteforekomst (togruteId, ukedagNr, ukeNr, aar) VALUES (2, 1, 15, 2023);
+
+INSERT INTO togruteforekomst (togruteId, ukedagNr, ukeNr, aar) VALUES (2, 1, 12, 2023);
 -- Togrute 3
 INSERT INTO togruteforekomst (togruteId, ukedagNr, ukeNr, aar) VALUES (3, 1, 14, 2023);
 INSERT INTO togruteforekomst (togruteId, ukedagNr, ukeNr, aar) VALUES (3, 2, 14, 2023);
+
+-- Ny kunde
+INSERT INTO kunde (fornavn, etternavn, email, mobilnummer) VALUES ('Johan', 'Golden', 'johang@example.com', 98765432);
+
+-- Ny kundeordre for togrute 1
+INSERT INTO kundeOrdre (kundenummer, forekomstId) VALUES (1, 2);
+INSERT INTO billett (ordreNr, vognId, plassNr, sekvensNrStart, sekvensNrEnde) VALUES (1, 1, 3, 2, 4);
+
+INSERT INTO kundeOrdre (kundenummer, forekomstId) VALUES (1, 7);
+INSERT INTO billett (ordreNr, vognId, plassNr, sekvensNrStart, sekvensNrEnde) VALUES (2, 1, 5, 1, 5);
