@@ -96,6 +96,31 @@ while True:
                 argument_list[1],
             )
 
+    # lage ny vognmodell
+    elif argument_list[0] == "ny_vognmodell":
+        if len(argument_list) != 2:
+            print(
+                "Bruk: ny_vognmodell modellnavn")
+        else:
+            isSittingCart = input("Sittevogn? y/n: ").lower() == "y"
+        
+            if isSittingCart:
+                sittingCartArgs = input("stolrader seterPerRad: ").split(" ")
+                compartments = None
+            else:
+                compartments = input("kupeer: ")
+                sittingCartArgs = [None, None]
+
+            cart_model_id = db_manager.create_cart_model(
+                argument_list[1], 
+                isSittingCart, 
+                sittingCartArgs[0], 
+                sittingCartArgs[1], 
+                compartments
+            )
+
+            print("ID til ny VognModell: ", cart_model_id)
+
     # exit
     elif argument_list[0] in ["exit", "q", "quit", "slutt"]:
         print("Avslutter TogDB CLI...")
@@ -130,6 +155,8 @@ to stasjoner på en spesifikk togrute
 kjop_billett - kjøper en billett
 
 hent_ordre - henter ordrer i fremtiden for en bruker.
+
+ny_vognmodell - lag ny vognmodell
 """)
 
     else:

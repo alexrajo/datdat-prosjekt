@@ -269,3 +269,33 @@ class Train_Db_Manager:
         self.db_connection.commit()
         return (res_ticket.lastrowid, res_order.lastrowid)
 
+    def create_cart_model(self, modelname, isSittingCart, seatRows, seatsPerRow, compartments):
+        """Creates a new cart model
+
+        Parameters:
+            modelname (str): the name of the new cart model to be made
+            isSittingCart (boolean): is the cart a sitting cart?
+            seatRows (int): the number of rows in the cart if it is a sitting cart
+            seatsPerRow (int): the number of seats per row if it is a sitting cart
+            compartments (int): the number of compartments with beds if it is a sleeping cart
+
+        Returns:
+            (int): generated id for vognModell and corresponding sittevognModell or sovevognModell.
+        """
+
+        self.execute("""
+            INSERT INTO vognmodell (modellNavn) VALUES ('{modellNavn}');
+        """.format(modellNavn=modelname))
+        cart_model_id = self.db_cursor.lastrowid
+        if isSittingCart:
+            self.execute("""
+                INSERT INTO sittevognModell VALUES ({vognModellId}, {stolrader}, {seterPerRad});
+            """.format(vognModellId=cart_model_id, stolrader=seatRows, seterPerRad=seatsPerRow))
+        else:
+            self.execute("""
+                INSERT INTO sovevognModell VALUES ({vognModellId}, {kupeer});
+            """.format(vognModellId=cart_model_id, kupeer=compartments))
+        
+        self.db_connection.commit()
+        return cart_model_id
+
