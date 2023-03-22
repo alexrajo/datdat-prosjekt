@@ -235,7 +235,29 @@ class Train_Db_Manager:
         Returns:
             (int, int): generated id for (ticket, order).
         """
-
+        self.execute(
+            """
+                SELECT tidspunkt, togruteforekomst.ukedagNr, ukeNr, aar FROM togruteforekomst 
+                INNER JOIN ukedag USING (togruteId) 
+                INNER JOIN stopp USING (togruteId)
+                WHERE (
+                forekomstId = {train_route_instance_id} 
+                AND 
+                sekvensnr = {sequence_n_start} 
+                )
+            """.format(
+                train_route_instance_id=train_route_instance_id, sequence_n_start=sequence_n_start ))
+        row = self.db_cursor.fetchone()
+        year = row[3]
+        week_number = row[2]
+        day_number = str(int(row[1])-1)
+        time_object = datetime.strptime(str(row[0]), '%H:%M:%S').time()
+        date_object = datetime.strptime(f"{year}-{week_number}-{day_number}", "%Y-%W-%w").date()
+        combined_object = datetime.combine(date_object, time_object)
+        print(combined_object)
+        current_time = datetime.now()
+        if(current_time >= combined_object):
+            return print("The train has already passed the start-station")
         self.execute(
             """
                 SELECT * FROM togruteforekomst INNER JOIN togrute USING (togruteId) WHERE forekomstId =
