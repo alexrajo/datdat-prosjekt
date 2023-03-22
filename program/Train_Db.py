@@ -30,23 +30,109 @@ class Train_Db_Manager:
         """
         return self.db_cursor.execute(command)
 
-    def find_tickets(self, train_route_id: int, start_station_id: int,
-                     end_station_id: int, datetime: datetime):
-        """Finds all available tickets between two stations.
+    def find_tickets(self, train_route_id: int, start_station_seq_nr: int,
+                     end_station_seq_nr: int):
+        """Finds all available tickets between two stations with given sequence numbers.
 
         Parameters:
             train_route_id (int): number corresponding to id of train route 
             which tickets to return.
             start_station_id (int): number corresponding to id of start station.
             end_station_id (int): number corresponding to id of end station.
-            datetime (datetime): date and time user searches for.
 
         Returns:
             A list of tuples containing <attributes>.
 
             list<(<attribute>: <type>,...)>.
         """
-        return NotImplemented
+
+        self.execute("DROP VIEW IF EXISTS vognmodell_plasser;")
+        self.execute("""
+            CREATE TEMP VIEW vognmodell_plasser
+            AS
+            SELECT 
+                vognModellId, 
+                COALESCE(sittevognModell.seterPerRad, 0) * COALESCE(sittevognModell.stolrader, 0) + COALESCE(sovevognModell.kupeer, 0)*2 AS plasser
+            FROM vognModell
+            LEFT OUTER JOIN sittevognModell USING (vognModellId)
+            LEFT OUTER JOIN sovevognModell USING (vognModellId);
+        """)
+
+        relevantCartModelIds = self.execute("""
+            SELECT DISTINCT vognModellId FROM togrute
+            INNER JOIN vogn USING(togruteId)
+            WHERE togruteId = {input_togruteId};
+        """.format(input_togruteId=train_route_id)).fetchall()
+
+        available_tickets = []
+
+        for row in relevantCartModelIds:
+            cart_model_id = row[0]
+
+            self.execute("DROP VIEW IF EXISTS vogn_plasser;")
+            self.execute("""
+                CREATE TEMP VIEW vogn_plasser
+                AS 
+                WITH plasser AS (
+                        SELECT 1 AS plassNr
+                        UNION ALL
+                        SELECT (plassNr + 1)
+                        FROM plasser CROSS JOIN vognmodell_plasser
+                        WHERE plassNr < vognmodell_plasser.plasser
+                        AND vognmodell_plasser.vognModellId = {vognModellId}
+                    ) SELECT * FROM plasser;
+            """.format(vognModellId=cart_model_id))
+
+            # Find all available tickets with the corresponding vognModellId
+            avtickets = self.execute('''
+            SELECT DISTINCT 
+                vogn_plasser.plassNr, 
+                vognId,
+                aar,
+                ukeNr,
+                ukedagNr,
+                vognModell.modellnavn AS vogntype
+            FROM togruteforekomst AS togruteforekomstMulig
+            INNER JOIN togrute USING(togruteId)
+            INNER JOIN vogn USING(togruteId)
+            INNER JOIN stopp AS startstopp USING(togruteId)
+            INNER JOIN stopp AS endestopp USING(togruteId)
+            INNER JOIN vognModell USING(vognModellId)
+            CROSS JOIN vogn_plasser
+            WHERE (
+                (motHovedretning = 0 AND startstopp.sekvensNr < endestopp.sekvensNr
+                OR
+                motHovedretning = 1 AND startstopp.sekvensNr > endestopp.sekvensNr)
+                AND togruteId = {input_togruteId}
+                AND vogn.vognModellId = {input_vognModellId}
+                AND startstopp.sekvensNr = {input_sekvensNrStart}
+                AND endestopp.sekvensNr = {input_sekvensNrEnde}
+            )
+            AND NOT EXISTS (
+                SELECT * FROM billett 
+                INNER JOIN kundeOrdre AS bestiltKundeOrdre USING(ordreNr) 
+                INNER JOIN togruteforekomst AS bestiltTogruteforekomst USING(forekomstId)
+                INNER JOIN togrute AS bestiltTogrute USING(togruteId)
+                INNER JOIN vogn AS bestiltVogn USING(vognId)
+                WHERE (
+                    startstopp.sekvensNr < billett.sekvensNrEnde AND
+                    billett.sekvensNrStart < endestopp.sekvensNr
+                )
+                AND bestiltTogruteforekomst.forekomstId = togruteforekomstMulig.forekomstId
+                AND billett.plassNr = vogn_plasser.plassNr
+                AND vogn.vognId = bestiltVogn.vognId
+            );'''.format(
+                input_vognModellId=cart_model_id,
+                input_togruteId=train_route_id,
+                input_sekvensNrStart=start_station_seq_nr,
+                input_sekvensNrEnde=end_station_seq_nr
+            )
+            ).fetchall()
+            available_tickets.extend(avtickets)
+
+        print(pd.DataFrame(available_tickets, columns=[
+              "plassNr", "vognId", "aar", "ukeNr", "ukedagNr", "vogntype"]))
+        return available_tickets
 
     def get_orders(self, customer_n: int):
         """Gets future orders of a customer.

@@ -91,7 +91,16 @@ while True:
 
     # Oppgave g) finn ledige billetter og kjøp
     elif argument_list[0] == "finn_ledige_billetter":
-        db_manager.find_tickets()
+        if len(argument_list) != 4:
+            print(
+                "Bruk: finn_ledige_billetter togruteId startSekvensNr sluttSekvensNr"
+            )
+        else:
+            db_manager.find_tickets(
+                int(argument_list[1]),
+                int(argument_list[2]),
+                int(argument_list[3])
+            )
 
     elif argument_list[0] == "kjop_billett":
         if (len(argument_list) != 7):
