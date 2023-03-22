@@ -91,7 +91,8 @@ class Train_Db_Manager:
                 aar,
                 ukeNr,
                 ukedagNr,
-                vognModell.modellnavn AS vogntype
+                vognModell.modellnavn AS vogntype,
+                togruteforekomstMulig.forekomstId AS forekomstId
             FROM togruteforekomst AS togruteforekomstMulig
             INNER JOIN togrute USING(togruteId)
             INNER JOIN vogn USING(togruteId)
@@ -110,38 +111,32 @@ class Train_Db_Manager:
             )
             AND NOT EXISTS (
                 SELECT * FROM billett
-                INNER JOIN kundeOrdre AS bestiltKundeOrdre USING(ordreNr) 
-                INNER JOIN togruteforekomst AS bestiltTogruteforekomst USING(forekomstId)
-                INNER JOIN togrute AS bestiltTogrute USING(togruteId)
+                INNER JOIN kundeOrdre AS bestiltKundeOrdre USING(ordreNr)
                 INNER JOIN vogn AS bestiltVogn USING(vognId)
-                WHERE (
+                WHERE togruteforekomstMulig.forekomstId = 
+                    bestiltKundeOrdre.forekomstId
+                AND billett.vognId = vogn.vognId
+                AND (
                     (
-                        vogn.vognModellId IN (SELECT vognModellId FROM sittevognModell)
-                        AND
-                        (startstopp.sekvensNr < billett.sekvensNrEnde AND
-                        billett.sekvensNrStart < endestopp.sekvensNr
-                        AND billett.plassNr = vogn_plasser.plassNr)
+                        bestiltVogn.vognModellId IN 
+                        (SELECT vognModellId FROM sovevognModell) AND 
+                        (
+                            floor((vogn_plasser.plassNr+1)/2) = 
+                            floor((billett.plassNr+1)/2)
+                        )
                     )
                     OR
                     (
-                        vogn.vognModellId IN (SELECT vognModellId FROM sovevognModell)
-                        AND
-                        EXISTS (
-                            SELECT * FROM billett AS b2
-                            INNER JOIN kundeOrdre AS ko2 USING (ordreNr)
-                            INNER JOIN vogn AS v2 USING (vognId)
-                            WHERE ko2.forekomstId = bestiltKundeOrdre.forekomstId
-                            AND v2.vognId = bestiltVogn.vognId
-                            AND (
-                                billett.plassNr = b2.plassNr
-                                OR
-                                billett.plassNr = b2.plassNr - 1
-                            )
+                        bestiltVogn.vognModellId IN 
+                        (SELECT vognModellId FROM sittevognModell) AND 
+                        (
+                            billett.plassNr = vogn_plasser.plassNr
+                            AND
+                            (startstopp.sekvensNr < billett.sekvensNrEnde AND
+                            billett.sekvensNrStart < endestopp.sekvensNr)
                         )
                     )
                 )
-                AND bestiltTogruteforekomst.forekomstId = togruteforekomstMulig.forekomstId
-                AND vogn.vognId = bestiltVogn.vognId
             );'''.format(
                 input_vognModellId=cart_model_id,
                 input_togruteId=train_route_id,
@@ -151,8 +146,12 @@ class Train_Db_Manager:
             ).fetchall()
             available_tickets.extend(avtickets)
 
-        print(pd.DataFrame(available_tickets, columns=[
-              "plassNr", "vognId", "aar", "ukeNr", "ukedagNr", "vogntype"]))
+        pd.set_option("display.max_rows", None)
+        print(
+            pd.DataFrame(
+                available_tickets,
+                columns=["plassNr", "vognId", "aar", "ukeNr", "ukedagNr",
+                         "vogntype", "forekomstId"]))
         return available_tickets
 
     def get_orders(self, customer_n: int):
@@ -364,7 +363,7 @@ class Train_Db_Manager:
         combined_object = datetime.combine(date_object, time_object)
         print(combined_object)
         current_time = datetime.now()
-        if (current_time >= combined_object):
+        if (current_time > combined_object):
             return print("The train has already passed the start-station")
         self.execute(
             """

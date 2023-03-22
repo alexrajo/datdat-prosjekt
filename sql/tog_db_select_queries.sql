@@ -235,3 +235,82 @@ AND NOT EXISTS (
 -- SELECT * FROM plasser;
 
 -- DROP VIEW IF EXISTS plasser;
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+SELECT DISTINCT 
+                vogn_plasser.plassNr, 
+                vognId,
+                aar,
+                ukeNr,
+                ukedagNr,
+                vognModell.modellnavn AS vogntype
+            FROM togruteforekomst AS togruteforekomstMulig
+            INNER JOIN togrute USING(togruteId)
+            INNER JOIN vogn USING(togruteId)
+            INNER JOIN stopp AS startstopp USING(togruteId)
+            INNER JOIN stopp AS endestopp USING(togruteId)
+            INNER JOIN vognModell USING(vognModellId)
+            CROSS JOIN vogn_plasser
+            WHERE (
+                (motHovedretning = 0 AND startstopp.sekvensNr < endestopp.sekvensNr
+                OR
+                motHovedretning = 1 AND startstopp.sekvensNr > endestopp.sekvensNr)
+                AND togruteId = {input_togruteId}
+                AND vogn.vognModellId = {input_vognModellId}
+                AND startstopp.sekvensNr = {input_sekvensNrStart}
+                AND endestopp.sekvensNr = {input_sekvensNrEnde}
+            )
+            AND NOT EXISTS (
+                SELECT * FROM billett
+                INNER JOIN kundeOrdre AS bestiltKundeOrdre USING(ordreNr)
+                WHERE togruteforekomstMulig.forekomstId = bestiltKundeOrdre.forekomstId
+            );
