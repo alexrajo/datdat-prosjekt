@@ -2,6 +2,7 @@ from sqlite3 import Cursor, Connection, connect
 from datetime import datetime
 import pandas as pd
 
+
 class Train_Db_Manager:
     """Class with methods for managing the train database.
 
@@ -30,7 +31,7 @@ class Train_Db_Manager:
         return self.db_cursor.execute(command)
 
     def find_tickets(self, train_route_id: int, start_station_id: int,
-                     end_station_id: int):
+                     end_station_id: int, datetime: datetime):
         """Finds all available tickets between two stations.
 
         Parameters:
@@ -38,6 +39,7 @@ class Train_Db_Manager:
             which tickets to return.
             start_station_id (int): number corresponding to id of start station.
             end_station_id (int): number corresponding to id of end station.
+            datetime (datetime): date and time user searches for.
 
         Returns:
             A list of tuples containing <attributes>.
@@ -79,9 +81,9 @@ class Train_Db_Manager:
             aar = {current_aar} AND ukeNr = {current_ukeNr} AND ukedagNr > {current_ukedagNr}
             );
         """.format(
-            input_kundenummer=customer_n, 
-            current_aar=current_year, 
-            current_ukeNr=current_week, 
+            input_kundenummer=customer_n,
+            current_aar=current_year,
+            current_ukeNr=current_week,
             current_ukedagNr=current_weekday
         ), self.db_connection))
 
@@ -184,14 +186,14 @@ class Train_Db_Manager:
         """.format(ukedagNr=weekday_n, jernbanestasjonId=station_id), self.db_connection))
 
     def register_user(
-            self, first_name: str, surname: str, email: str, phone_number: str):
+            self, first_name: str, surname: str, email: str, phone_number: int):
         """Registers customer to sqlite database.
 
         Parameters:
             first_name (str): first name of customer.
             surname (str): surname of customer.
             email (str): email of customer.
-            phone_number (str): phone number of customer, 8 numeliterals, 
+            phone_number (int): phone number of customer, 8 numbers, 
             no country code.
 
         Returns:

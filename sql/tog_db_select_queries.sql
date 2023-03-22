@@ -60,3 +60,11 @@ SELECT tidspunkt, jernbanestasjon.navn AS stasjon, motHovedretning FROM togrute
 --     aar = input_aar + 1 AND ukeNr = 1 AND ukedagNr = 1
 -- )
 -- ORDER BY klokkeslett, ukedagNr, ukeNr, aar;
+
+
+SELECT forekomstId, plassNr, vognId, sekvensNrStart, sekvensNrEnde FROM billett 
+INNER JOIN kundeOrdre AS bestiltKundeOrdre USING(ordreNr) 
+INNER JOIN kunde AS bestiltKunde USING(kundenummer) 
+INNER JOIN togruteforekomst AS bestiltTogruteforekomst USING(forekomstId)
+INNER JOIN togrute as USING(togruteId)
+INNER JOIN vogn USING(vognId);
