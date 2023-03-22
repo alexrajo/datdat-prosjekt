@@ -5,13 +5,16 @@ from sys import platform
 import datetime
 
 isRunningOnMacos = platform.startswith("darwin")
-if isRunningOnMacos: # darwin = macos
+if isRunningOnMacos:  # darwin = macos
     import readline
 
-COMMANDS = ["hent_togruter_for_stasjon","hent_ruter_mellom_stasjoner", "registrer_bruker", "finn_ledige_billetter", "kjop_billett","hent_ordre"]
+COMMANDS = ["hent_togruter_for_stasjon", "hent_ruter_mellom_stasjoner",
+            "registrer_bruker", "finn_ledige_billetter", "kjop_billett",
+            "hent_ordre", ]
+
 
 def completer(text, state):
-    options = [i for i in commands if i.startswith(text)]
+    options = [i for i in COMMANDS if i.startswith(text)]
     if state < len(options):
         return options[state]
     else:
@@ -36,12 +39,14 @@ while True:
     # Kommando skal ikke være case sensitive
     argument_list[0] = argument_list[0].lower()
 
-    # Oppgave c), få ut alle togruter for en gitt jernbanestasjon på en gitt ukedag
+    # Oppgave c), få ut alle togruter for en gitt jernbanestasjon på en gitt
+    # ukedag
     # Tar inn en stasjon og en ukedag
     if argument_list[0] == "hent_togruter_for_stasjon":
         if len(argument_list) != 3:
             print(
-                "Bruk: hent_togruter_for_stasjon jernbanestasjonId ukedagNr (1: mandag - 7: søndag)")
+                "Bruk: hent_togruter_for_stasjon jernbanestasjonId ukedagNr " +
+                "(1: mandag - 7: søndag)")
         else:
             db_manager.get_train_routes(
                 int(argument_list[1]),
@@ -52,7 +57,8 @@ while True:
     elif argument_list[0] == "hent_ruter_mellom_stasjoner":
         if len(argument_list) != 4:
             print(
-                "Bruk: hent_ruter_mellom_stasjoner startstasjonid sluttstasjonid yyyy-mm-dd")
+                "Bruk: hent_ruter_mellom_stasjoner startstasjonid " +
+                "sluttstasjonid yyyy-mm-dd")
         else:
             timestamp_string = argument_list[3]
             format_string = '%Y-%m-%d'
@@ -68,15 +74,19 @@ while True:
 
     # Oppgave e) registrer bruker
     elif argument_list[0] == "registrer_bruker":
-        if len(argument_list) != 5:
+        if len(argument_list) < 5:
             print(
-                "Bruk: registrer_bruker fornavn etternavn email phone_number")
+                "Bruk: registrer_bruker email phone_number etternavn" +
+                " fornavn <optional x antall mellomnavn>" +
+                "Eksempel: registrer_bruker ex@mail.com 40060200 nordmann " +
+                "ola mellomnavn annetmellomnavn")
         else:
+            first_name = ' '.join(argument_list[4:])
             db_manager.register_user(
-                argument_list[1],
-                argument_list[2],
+                first_name,
                 argument_list[3],
-                argument_list[4],
+                argument_list[1],
+                int(argument_list[2]),
             )
 
     # Oppgave g) finn ledige billetter og kjøp
@@ -84,7 +94,19 @@ while True:
         db_manager.find_tickets()
 
     elif argument_list[0] == "kjop_billett":
-        db_manager.create_ticket()
+        if (len(argument_list) != 7):
+            print(
+                "Bruk: kjop_billett vogn_id plass_nr sekvens_nr_start"
+                + " sekvens_nr_ende kundenr togruteforekomst_id"
+            )
+        else:
+            db_manager.create_ticket(
+                int(argument_list[1]),
+                int(argument_list[2]),
+                int(argument_list[3]),
+                int(argument_list[4]),
+                int(argument_list[5]),
+                int(argument_list[6]))
 
     # Oppgave h) info om tidligere kjøp for fremtidige reiser
     elif argument_list[0] == "hent_ordre":

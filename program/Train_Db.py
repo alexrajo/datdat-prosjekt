@@ -2,6 +2,7 @@ from sqlite3 import Cursor, Connection, connect
 from datetime import datetime
 import pandas as pd
 
+
 class Train_Db_Manager:
     """Class with methods for managing the train database.
 
@@ -30,7 +31,7 @@ class Train_Db_Manager:
         return self.db_cursor.execute(command)
 
     def find_tickets(self, train_route_id: int, start_station_id: int,
-                     end_station_id: int):
+                     end_station_id: int, datetime: datetime):
         """Finds all available tickets between two stations.
 
         Parameters:
@@ -38,13 +39,61 @@ class Train_Db_Manager:
             which tickets to return.
             start_station_id (int): number corresponding to id of start station.
             end_station_id (int): number corresponding to id of end station.
+            datetime (datetime): date and time user searches for.
 
         Returns:
             A list of tuples containing <attributes>.
 
             list<(<attribute>: <type>,...)>.
         """
-        return NotImplemented
+        print(pd.read_sql_query("""
+        SELECT DISTINCT
+        togruteid, 
+        rutenavn,  
+        banestrekningId, 
+        tidspunkt AS avgang
+        FROM togrute 
+        INNER JOIN stopp AS startstopp USING (togruteId)
+        INNER JOIN stasjonPaaStrekning USING (banestrekningId, sekvensNr)
+        INNER JOIN jernbanestasjon USING (jernbanestasjonId)
+        INNER JOIN togruteforekomst USING (togruteId)
+        WHERE (
+            jernbanestasjonId = {input_startstasjonId}
+            AND togruteId IN (
+                SELECT sluttstopp.togruteId FROM togrute AS t2
+                INNER JOIN stopp AS sluttstopp USING (togruteId)
+                INNER JOIN stasjonPaaStrekning 
+                USING (banestrekningId, sekvensNr)
+                INNER JOIN jernbanestasjon USING (jernbanestasjonId)
+                WHERE jernbanestasjonId = {input_sluttstasjonId}
+                AND (
+                    (motHovedretning = 0 
+                    AND startstopp.sekvensnr <= sluttstopp.sekvensnr) 
+                    OR 
+                    (motHovedretning = 1 
+                    AND startstopp.sekvensnr > sluttstopp.sekvensnr)
+                    )
+            )
+            AND
+            aar = {input_aar} 
+            AND 
+            (
+                ukeNr = {input_ukeNr} AND (ukedagNr = {input_ukedagNr} 
+                OR ukedagNr = {input_ukedagNr} + 1)
+                OR {input_ukedagNr} = 7 
+                AND ukeNr = {input_ukeNr} + 1 AND ukedagNr = 1
+            )
+            OR
+            aar = {input_aar} + 1 AND ukeNr = 1 AND ukedagNr = 1
+        )
+        ORDER BY avgang, ukedagNr, ukeNr, aar, avgang;
+        """.format(
+            input_startstasjonId=start_station_id,
+            input_sluttstasjonId=end_station_id,
+            input_aar=datetime.isocalendar()[0],
+            input_ukeNr=datetime.isocalendar()[1],
+            input_ukedagNr=datetime.isocalendar()[2]
+        ), self.db_connection))
 
     def get_orders(self, customer_n: int):
         """Gets future orders of a customer.
@@ -79,9 +128,9 @@ class Train_Db_Manager:
             aar = {current_aar} AND ukeNr = {current_ukeNr} AND ukedagNr > {current_ukedagNr}
             );
         """.format(
-            input_kundenummer=customer_n, 
-            current_aar=current_year, 
-            current_ukeNr=current_week, 
+            input_kundenummer=customer_n,
+            current_aar=current_year,
+            current_ukeNr=current_week,
             current_ukedagNr=current_weekday
         ), self.db_connection))
 
@@ -268,4 +317,3 @@ class Train_Db_Manager:
             ))
         self.db_connection.commit()
         return (res_ticket.lastrowid, res_order.lastrowid)
-
