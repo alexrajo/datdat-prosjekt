@@ -109,17 +109,38 @@ class Train_Db_Manager:
                 AND endestopp.sekvensNr = {input_sekvensNrEnde}
             )
             AND NOT EXISTS (
-                SELECT * FROM billett 
+                SELECT * FROM billett
                 INNER JOIN kundeOrdre AS bestiltKundeOrdre USING(ordreNr) 
                 INNER JOIN togruteforekomst AS bestiltTogruteforekomst USING(forekomstId)
                 INNER JOIN togrute AS bestiltTogrute USING(togruteId)
                 INNER JOIN vogn AS bestiltVogn USING(vognId)
                 WHERE (
-                    startstopp.sekvensNr < billett.sekvensNrEnde AND
-                    billett.sekvensNrStart < endestopp.sekvensNr
+                    (
+                        vogn.vognModellId IN (SELECT vognModellId FROM sittevognModell)
+                        AND
+                        (startstopp.sekvensNr < billett.sekvensNrEnde AND
+                        billett.sekvensNrStart < endestopp.sekvensNr
+                        AND billett.plassNr = vogn_plasser.plassNr)
+                    )
+                    OR
+                    (
+                        vogn.vognModellId IN (SELECT vognModellId FROM sovevognModell)
+                        AND
+                        EXISTS (
+                            SELECT * FROM billett AS b2
+                            INNER JOIN kundeOrdre AS ko2 USING (ordreNr)
+                            INNER JOIN vogn AS v2 USING (vognId)
+                            WHERE ko2.forekomstId = bestiltKundeOrdre.forekomstId
+                            AND v2.vognId = bestiltVogn.vognId
+                            AND (
+                                billett.plassNr = b2.plassNr
+                                OR
+                                billett.plassNr = b2.plassNr - 1
+                            )
+                        )
+                    )
                 )
                 AND bestiltTogruteforekomst.forekomstId = togruteforekomstMulig.forekomstId
-                AND billett.plassNr = vogn_plasser.plassNr
                 AND vogn.vognId = bestiltVogn.vognId
             );'''.format(
                 input_vognModellId=cart_model_id,
@@ -332,17 +353,18 @@ class Train_Db_Manager:
                 sekvensnr = {sequence_n_start} 
                 )
             """.format(
-                train_route_instance_id=train_route_instance_id, sequence_n_start=sequence_n_start ))
+                train_route_instance_id=train_route_instance_id, sequence_n_start=sequence_n_start))
         row = self.db_cursor.fetchone()
         year = row[3]
         week_number = row[2]
         day_number = str(int(row[1])-1)
         time_object = datetime.strptime(str(row[0]), '%H:%M:%S').time()
-        date_object = datetime.strptime(f"{year}-{week_number}-{day_number}", "%Y-%W-%w").date()
+        date_object = datetime.strptime(
+            f"{year}-{week_number}-{day_number}", "%Y-%W-%w").date()
         combined_object = datetime.combine(date_object, time_object)
         print(combined_object)
         current_time = datetime.now()
-        if(current_time >= combined_object):
+        if (current_time >= combined_object):
             return print("The train has already passed the start-station")
         self.execute(
             """
@@ -358,7 +380,7 @@ class Train_Db_Manager:
                 INSERT INTO kundeOrdre(kjopstidspunkt,kundenummer,forekomstId)
                 VALUES (DateTime('now'),{customer_n},{train_route_instance_id})
                 """.format(customer_n=customer_n,
-                        train_route_instance_id=train_route_instance_id))
+                           train_route_instance_id=train_route_instance_id))
             self.db_connection.commit()
             # Billett
             res_ticket = self.execute(
@@ -387,9 +409,11 @@ class Train_Db_Manager:
             self.db_connection.commit()
             return (res_ticket.lastrowid, res_order.lastrowid)
         else:
-            return print("You cannot book order a ticket that goes against the direction of the train!")
+            return print(
+                "You cannot book order a ticket that goes against the direction of the train!")
 
-    def create_cart_model(self, modelname, isSittingCart, seatRows, seatsPerRow, compartments):
+    def create_cart_model(self, modelname, isSittingCart, seatRows, seatsPerRow,
+                          compartments):
         """Creates a new cart model
 
         Parameters:
@@ -415,7 +439,6 @@ class Train_Db_Manager:
             self.execute("""
                 INSERT INTO sovevognModell VALUES ({vognModellId}, {kupeer});
             """.format(vognModellId=cart_model_id, kupeer=compartments))
-        
+
         self.db_connection.commit()
         return cart_model_id
-
