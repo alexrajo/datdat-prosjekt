@@ -321,38 +321,101 @@ class Train_Db_Manager:
         Returns:
             (int, int): generated id for (ticket, order).
         """
-
-        # Ordre
-        res_order = self.execute(
+        self.execute(
             """
-            INSERT INTO kundeOrdre(kjopstidspunkt,kundenummer,forekomstId)
-            VALUES (DateTime('now'),{customer_n},{train_route_instance_id})
-            """.format(customer_n=customer_n,
-                       train_route_instance_id=train_route_instance_id))
-        self.db_connection.commit()
-        # Billett
-        res_ticket = self.execute(
-            """
-            INSERT INTO billett(
-                ordreNr, 
-                vognId, 
-                plassNr, 
-                sekvensNrStart, 
-                sekvensNrEnde
-            )
-            VALUES (
-                {order_n}, 
-                {cart_id}, 
-                {placement_n}, 
-                {sequence_n_start}, 
-                {sequence_n_end}
-            )
+                SELECT tidspunkt, togruteforekomst.ukedagNr, ukeNr, aar FROM togruteforekomst 
+                INNER JOIN ukedag USING (togruteId) 
+                INNER JOIN stopp USING (togruteId)
+                WHERE (
+                forekomstId = {train_route_instance_id} 
+                AND 
+                sekvensnr = {sequence_n_start} 
+                )
             """.format(
-                order_n=res_order.lastrowid,
-                cart_id=cart_id,
-                placement_n=placement_n,
-                sequence_n_start=sequence_n_start,
-                sequence_n_end=sequence_n_end
-            ))
+                train_route_instance_id=train_route_instance_id, sequence_n_start=sequence_n_start ))
+        row = self.db_cursor.fetchone()
+        year = row[3]
+        week_number = row[2]
+        day_number = str(int(row[1])-1)
+        time_object = datetime.strptime(str(row[0]), '%H:%M:%S').time()
+        date_object = datetime.strptime(f"{year}-{week_number}-{day_number}", "%Y-%W-%w").date()
+        combined_object = datetime.combine(date_object, time_object)
+        print(combined_object)
+        current_time = datetime.now()
+        if(current_time >= combined_object):
+            return print("The train has already passed the start-station")
+        self.execute(
+            """
+                SELECT * FROM togruteforekomst INNER JOIN togrute USING (togruteId) WHERE forekomstId =
+                {train_route_instance_id} AND motHovedretning = 1
+            """.format(
+                train_route_instance_id=train_route_instance_id))
+        isAgainstMainDirection = self.db_cursor.fetchone()
+        if ((isAgainstMainDirection and sequence_n_start > sequence_n_end) or (not isAgainstMainDirection and sequence_n_start < sequence_n_end)):
+            # Ordre
+            res_order = self.execute(
+                """
+                INSERT INTO kundeOrdre(kjopstidspunkt,kundenummer,forekomstId)
+                VALUES (DateTime('now'),{customer_n},{train_route_instance_id})
+                """.format(customer_n=customer_n,
+                        train_route_instance_id=train_route_instance_id))
+            self.db_connection.commit()
+            # Billett
+            res_ticket = self.execute(
+                """
+                INSERT INTO billett(
+                    ordreNr, 
+                    vognId, 
+                    plassNr, 
+                    sekvensNrStart, 
+                    sekvensNrEnde
+                )
+                VALUES (
+                    {order_n}, 
+                    {cart_id}, 
+                    {placement_n}, 
+                    {sequence_n_start}, 
+                    {sequence_n_end}
+                )
+                """.format(
+                    order_n=res_order.lastrowid,
+                    cart_id=cart_id,
+                    placement_n=placement_n,
+                    sequence_n_start=sequence_n_start,
+                    sequence_n_end=sequence_n_end
+                ))
+            self.db_connection.commit()
+            return (res_ticket.lastrowid, res_order.lastrowid)
+        else:
+            return print("You cannot book order a ticket that goes against the direction of the train!")
+
+    def create_cart_model(self, modelname, isSittingCart, seatRows, seatsPerRow, compartments):
+        """Creates a new cart model
+
+        Parameters:
+            modelname (str): the name of the new cart model to be made
+            isSittingCart (boolean): is the cart a sitting cart?
+            seatRows (int): the number of rows in the cart if it is a sitting cart
+            seatsPerRow (int): the number of seats per row if it is a sitting cart
+            compartments (int): the number of compartments with beds if it is a sleeping cart
+
+        Returns:
+            (int): generated id for vognModell and corresponding sittevognModell or sovevognModell.
+        """
+
+        self.execute("""
+            INSERT INTO vognmodell (modellNavn) VALUES ('{modellNavn}');
+        """.format(modellNavn=modelname))
+        cart_model_id = self.db_cursor.lastrowid
+        if isSittingCart:
+            self.execute("""
+                INSERT INTO sittevognModell VALUES ({vognModellId}, {stolrader}, {seterPerRad});
+            """.format(vognModellId=cart_model_id, stolrader=seatRows, seterPerRad=seatsPerRow))
+        else:
+            self.execute("""
+                INSERT INTO sovevognModell VALUES ({vognModellId}, {kupeer});
+            """.format(vognModellId=cart_model_id, kupeer=compartments))
+        
         self.db_connection.commit()
-        return (res_ticket.lastrowid, res_order.lastrowid)
+        return cart_model_id
+
