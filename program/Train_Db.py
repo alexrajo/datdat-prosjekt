@@ -46,54 +46,7 @@ class Train_Db_Manager:
 
             list<(<attribute>: <type>,...)>.
         """
-        print(pd.read_sql_query("""
-        SELECT DISTINCT
-        togruteid, 
-        rutenavn,  
-        banestrekningId, 
-        tidspunkt AS avgang
-        FROM togrute 
-        INNER JOIN stopp AS startstopp USING (togruteId)
-        INNER JOIN stasjonPaaStrekning USING (banestrekningId, sekvensNr)
-        INNER JOIN jernbanestasjon USING (jernbanestasjonId)
-        INNER JOIN togruteforekomst USING (togruteId)
-        WHERE (
-            jernbanestasjonId = {input_startstasjonId}
-            AND togruteId IN (
-                SELECT sluttstopp.togruteId FROM togrute AS t2
-                INNER JOIN stopp AS sluttstopp USING (togruteId)
-                INNER JOIN stasjonPaaStrekning 
-                USING (banestrekningId, sekvensNr)
-                INNER JOIN jernbanestasjon USING (jernbanestasjonId)
-                WHERE jernbanestasjonId = {input_sluttstasjonId}
-                AND (
-                    (motHovedretning = 0 
-                    AND startstopp.sekvensnr <= sluttstopp.sekvensnr) 
-                    OR 
-                    (motHovedretning = 1 
-                    AND startstopp.sekvensnr > sluttstopp.sekvensnr)
-                    )
-            )
-            AND
-            aar = {input_aar} 
-            AND 
-            (
-                ukeNr = {input_ukeNr} AND (ukedagNr = {input_ukedagNr} 
-                OR ukedagNr = {input_ukedagNr} + 1)
-                OR {input_ukedagNr} = 7 
-                AND ukeNr = {input_ukeNr} + 1 AND ukedagNr = 1
-            )
-            OR
-            aar = {input_aar} + 1 AND ukeNr = 1 AND ukedagNr = 1
-        )
-        ORDER BY avgang, ukedagNr, ukeNr, aar, avgang;
-        """.format(
-            input_startstasjonId=start_station_id,
-            input_sluttstasjonId=end_station_id,
-            input_aar=datetime.isocalendar()[0],
-            input_ukeNr=datetime.isocalendar()[1],
-            input_ukedagNr=datetime.isocalendar()[2]
-        ), self.db_connection))
+        return NotImplemented
 
     def get_orders(self, customer_n: int):
         """Gets future orders of a customer.
@@ -233,14 +186,14 @@ class Train_Db_Manager:
         """.format(ukedagNr=weekday_n, jernbanestasjonId=station_id), self.db_connection))
 
     def register_user(
-            self, first_name: str, surname: str, email: str, phone_number: str):
+            self, first_name: str, surname: str, email: str, phone_number: int):
         """Registers customer to sqlite database.
 
         Parameters:
             first_name (str): first name of customer.
             surname (str): surname of customer.
             email (str): email of customer.
-            phone_number (str): phone number of customer, 8 numeliterals, 
+            phone_number (int): phone number of customer, 8 numbers, 
             no country code.
 
         Returns:
