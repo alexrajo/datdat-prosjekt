@@ -236,40 +236,50 @@ class Train_Db_Manager:
             (int, int): generated id for (ticket, order).
         """
 
-        # Ordre
-        res_order = self.execute(
+        self.execute(
             """
-            INSERT INTO kundeOrdre(kjopstidspunkt,kundenummer,forekomstId)
-            VALUES (DateTime('now'),{customer_n},{train_route_instance_id})
-            """.format(customer_n=customer_n,
-                       train_route_instance_id=train_route_instance_id))
-        self.db_connection.commit()
-        # Billett
-        res_ticket = self.execute(
-            """
-            INSERT INTO billett(
-                ordreNr, 
-                vognId, 
-                plassNr, 
-                sekvensNrStart, 
-                sekvensNrEnde
-            )
-            VALUES (
-                {order_n}, 
-                {cart_id}, 
-                {placement_n}, 
-                {sequence_n_start}, 
-                {sequence_n_end}
-            )
+                SELECT * FROM togruteforekomst INNER JOIN togrute USING (togruteId) WHERE forekomstId =
+                {train_route_instance_id} AND motHovedretning = 1
             """.format(
-                order_n=res_order.lastrowid,
-                cart_id=cart_id,
-                placement_n=placement_n,
-                sequence_n_start=sequence_n_start,
-                sequence_n_end=sequence_n_end
-            ))
-        self.db_connection.commit()
-        return (res_ticket.lastrowid, res_order.lastrowid)
+                train_route_instance_id=train_route_instance_id))
+        isAgainstMainDirection = self.db_cursor.fetchone()
+        if ((isAgainstMainDirection and sequence_n_start > sequence_n_end) or (not isAgainstMainDirection and sequence_n_start < sequence_n_end)):
+            # Ordre
+            res_order = self.execute(
+                """
+                INSERT INTO kundeOrdre(kjopstidspunkt,kundenummer,forekomstId)
+                VALUES (DateTime('now'),{customer_n},{train_route_instance_id})
+                """.format(customer_n=customer_n,
+                        train_route_instance_id=train_route_instance_id))
+            self.db_connection.commit()
+            # Billett
+            res_ticket = self.execute(
+                """
+                INSERT INTO billett(
+                    ordreNr, 
+                    vognId, 
+                    plassNr, 
+                    sekvensNrStart, 
+                    sekvensNrEnde
+                )
+                VALUES (
+                    {order_n}, 
+                    {cart_id}, 
+                    {placement_n}, 
+                    {sequence_n_start}, 
+                    {sequence_n_end}
+                )
+                """.format(
+                    order_n=res_order.lastrowid,
+                    cart_id=cart_id,
+                    placement_n=placement_n,
+                    sequence_n_start=sequence_n_start,
+                    sequence_n_end=sequence_n_end
+                ))
+            self.db_connection.commit()
+            return (res_ticket.lastrowid, res_order.lastrowid)
+        else:
+            return print("You cannot book order a ticket that goes against the direction of the train!")
 
     def create_cart_model(self, modelname, isSittingCart, seatRows, seatsPerRow, compartments):
         """Creates a new cart model
