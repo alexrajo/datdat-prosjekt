@@ -441,3 +441,28 @@ class Train_Db_Manager:
 
         self.db_connection.commit()
         return cart_model_id
+
+    def get_sequence_n_station_id(self, togrute_id: int):
+        sql_sentence = '''
+        SELECT 
+        jernbanestasjon.navn AS stasjonsnavn,
+        jernbanestasjonId,
+        sekvensNr
+        FROM togrute 
+        INNER JOIN banestrekning USING(banestrekningId)
+        INNER JOIN stasjonPaaStrekning USING(banestrekningId)
+        INNER JOIN jernbanestasjon USING(jernbanestasjonId)
+        WHERE (togrute.togruteId = {togrute_id_input});
+        '''.format(togrute_id_input=togrute_id)
+
+        print(pd.read_sql_query(sql_sentence, self.db_connection))
+
+    def get_banestrekninger(self):
+        sql_sentence = '''SELECT navn, banestrekningId FROM banestrekning;'''
+        print(pd.read_sql_query(sql_sentence, self.db_connection))
+
+    def get_train_routes(self, banestrekning_id: int):
+        sql_sentence = '''SELECT rutenavn, togruteId FROM togrute
+        WHERE (banestrekningId = {banestrekning_id_input});
+        '''.format(banestrekning_id_input=banestrekning_id)
+        print(pd.read_sql_query(sql_sentence, self.db_connection))

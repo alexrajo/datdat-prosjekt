@@ -10,7 +10,8 @@ if isRunningOnMacos:  # darwin = macos
 
 COMMANDS = ["hent_togruter_for_stasjon", "hent_ruter_mellom_stasjoner",
             "registrer_bruker", "finn_ledige_billetter", "kjop_billett",
-            "hent_ordre", ]
+            "hent_ordre", "finn_jernbanestasjon_for_togrute",
+            "finn_banestrekninger", "finn_togruter_for_banestrekning", ]
 
 
 def completer(text, state):
@@ -134,7 +135,7 @@ while True:
                 "Bruk: ny_vognmodell modellnavn")
         else:
             isSittingCart = input("Sittevogn? y/n: ").lower() == "y"
-        
+
             if isSittingCart:
                 sittingCartArgs = input("stolrader seterPerRad: ").split(" ")
                 compartments = None
@@ -143,14 +144,31 @@ while True:
                 sittingCartArgs = [None, None]
 
             cart_model_id = db_manager.create_cart_model(
-                argument_list[1], 
-                isSittingCart, 
-                sittingCartArgs[0], 
-                sittingCartArgs[1], 
+                argument_list[1],
+                isSittingCart,
+                sittingCartArgs[0],
+                sittingCartArgs[1],
                 compartments
             )
 
             print("ID til ny VognModell: ", cart_model_id)
+
+    # Finn jernbanestasjoner for gitt togrute
+    elif argument_list[0] == "finn_jernbanestasjon_for_togrute":
+        if len(argument_list) != 2:
+            print("Bruk: finn_jernbanestasjon_for_togrute togrute_id")
+        else:
+            db_manager.get_sequence_n_station_id(int(argument_list[1]))
+
+    # Finn banestrekninger
+    elif argument_list[0] == "finn_banestrekninger":
+        db_manager.get_banestrekninger()
+
+    elif argument_list[0] == "finn_togruter_for_banestrekning":
+        if len(argument_list) != 2:
+            print("Bruk: finn_togruter_for_banestrekning banestrekning_id")
+        else:
+            db_manager.get_train_routes(int(argument_list[1]))
 
     # exit
     elif argument_list[0] in ["exit", "q", "quit", "slutt"]:
@@ -188,10 +206,17 @@ kjop_billett - kjøper en billett
 hent_ordre - henter ordrer i fremtiden for en bruker.
 
 ny_vognmodell - lag ny vognmodell
+
+finn_banestrekninger - finner alle banestrekninger på jernbanenettverket
+
+finn_togruter_for_banestrekning - finner alle togruter for en gitt banestrekning
+
+finn_jernbanestasjon_for_togrute - finner alle jernbanestasjoner for en gitt 
+togrute
 """)
 
     else:
-        print("Kommando ikke gjenkjent.")
+        print("Kommando ikke gjenkjent. Skriv \"hjelp\" for hjelp.")
 
 
 del db_manager
