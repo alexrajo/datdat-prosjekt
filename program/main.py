@@ -160,11 +160,17 @@ while True:
                 end_station_seq_nr
             )
 
+        print("sekvensnr valgt start: {sekstart}\n" +
+              "sekvensnr valgt ende: {sekende}".format(
+                  sekstart=start_station_seq_nr,
+                  sekende=end_station_seq_nr
+              ))
+
     elif argument_list[0] == "kjop_billett":
         if (len(argument_list) != 7):
             print(
-                "Bruk: kjop_billett vogn_id plass_nr sekvens_nr_start "
-                + "sekvens_nr_ende kundenr togruteforekomst_id\n\n" +
+                "Bruk: kjop_billett vogn_id plass_nr sekvens_nr_start " +
+                "sekvens_nr_ende kundenr togruteforekomst_id\n\n" +
                 "Om du er usikker på hva disse feltene skal være, bruk:\n" +
                 "finn_ledige_billetter"
             )
