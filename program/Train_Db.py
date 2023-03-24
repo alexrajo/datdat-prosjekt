@@ -1,6 +1,7 @@
 from sqlite3 import Cursor, Connection, connect
 from datetime import datetime
 import pandas as pd
+from tabulate import tabulate
 
 
 class Train_Db_Manager:
@@ -92,7 +93,7 @@ class Train_Db_Manager:
                 ukeNr,
                 ukedagNr,
                 vognModell.modellnavn AS vogntype,
-                togruteforekomstMulig.forekomstId AS forekomstId
+                togruteforekomstMulig.forekomstId AS togruteforekomstId
             FROM togruteforekomst AS togruteforekomstMulig
             INNER JOIN togrute USING(togruteId)
             INNER JOIN vogn USING(togruteId)
@@ -148,10 +149,12 @@ class Train_Db_Manager:
 
         pd.set_option("display.max_rows", None)
         print(
-            pd.DataFrame(
-                available_tickets,
-                columns=["plassNr", "vognId", "aar", "ukeNr", "ukedagNr",
-                         "vogntype", "forekomstId"]))
+            tabulate(
+                pd.DataFrame(
+                    available_tickets,
+                    columns=["plassNr", "vognId", "aar", "ukeNr", "ukedagNr",
+                             "vogntype", "togruteforekomstId"]),
+                headers='keys', tablefmt='psql', showindex=False))
         return available_tickets
 
     def get_orders(self, customer_n: int):
@@ -169,7 +172,7 @@ class Train_Db_Manager:
 
         current_year, current_week, current_weekday = datetime.today().isocalendar()
 
-        print(pd.read_sql_query("""
+        print(tabulate(pd.read_sql_query("""
         SELECT 
             ordreNr AS 'OrdreNr', 
             kjopstidspunkt AS 'Kjøpstidpunkt', 
@@ -191,7 +194,7 @@ class Train_Db_Manager:
             current_aar=current_year,
             current_ukeNr=current_week,
             current_ukedagNr=current_weekday
-        ), self.db_connection))
+        ), self.db_connection), headers='keys', tablefmt='psql', showindex=False))
 
     def get_route_by_stations(
         self, start_station_id: int, end_station_id: int,
@@ -212,7 +215,7 @@ class Train_Db_Manager:
             void
 
         """
-        print(pd.read_sql_query("""
+        print(tabulate(pd.read_sql_query("""
         SELECT DISTINCT
         togruteid, 
         rutenavn,  
@@ -259,7 +262,7 @@ class Train_Db_Manager:
             input_aar=datetime.isocalendar()[0],
             input_ukeNr=datetime.isocalendar()[1],
             input_ukedagNr=datetime.isocalendar()[2]
-        ), self.db_connection))
+        ), self.db_connection), headers='keys', tablefmt='psql', showindex=False))
 
     def get_train_routes(self, station_id: int, weekday_n: int):
         """Prints all train routes that goes through a given station on a given 
@@ -279,7 +282,7 @@ class Train_Db_Manager:
             rutenavn: string
             )>.
         """
-        print(pd.read_sql_query("""
+        print(tabulate(pd.read_sql_query("""
             SELECT 
             togrute.togruteId,  
             rutenavn
@@ -289,7 +292,8 @@ class Train_Db_Manager:
             INNER JOIN stasjonPaaStrekning USING (banestrekningId, sekvensNr) 
             WHERE ukedag.ukedagNr = {ukedagNr} 
             AND jernbanestasjonId = {jernbanestasjonId};
-        """.format(ukedagNr=weekday_n, jernbanestasjonId=station_id), self.db_connection))
+        """.format(ukedagNr=weekday_n, jernbanestasjonId=station_id),
+            self.db_connection), headers='keys', tablefmt='psql', showindex=False))
 
     def register_user(
             self, first_name: str, surname: str, email: str, phone_number: int):
@@ -442,11 +446,10 @@ class Train_Db_Manager:
         self.db_connection.commit()
         return cart_model_id
 
-    def get_sequence_n_station_id(self, togrute_id: int):
+    def get_sequence_n(self, togrute_id: int):
         sql_sentence = '''
         SELECT 
         jernbanestasjon.navn AS stasjonsnavn,
-        jernbanestasjonId,
         sekvensNr
         FROM togrute 
         INNER JOIN banestrekning USING(banestrekningId)
@@ -455,14 +458,23 @@ class Train_Db_Manager:
         WHERE (togrute.togruteId = {togrute_id_input});
         '''.format(togrute_id_input=togrute_id)
 
-        print(pd.read_sql_query(sql_sentence, self.db_connection))
+        print(
+            tabulate(
+                pd.read_sql_query(sql_sentence, self.db_connection),
+                headers='keys', tablefmt='psql', showindex=False))
 
     def get_banestrekninger(self):
         sql_sentence = '''SELECT navn, banestrekningId FROM banestrekning;'''
-        print(pd.read_sql_query(sql_sentence, self.db_connection))
+        print(
+            tabulate(
+                pd.read_sql_query(sql_sentence, self.db_connection),
+                headers='keys', tablefmt='psql', showindex=False))
 
     def get_train_routes(self, banestrekning_id: int):
         sql_sentence = '''SELECT rutenavn, togruteId FROM togrute
         WHERE (banestrekningId = {banestrekning_id_input});
         '''.format(banestrekning_id_input=banestrekning_id)
-        print(pd.read_sql_query(sql_sentence, self.db_connection))
+        print(
+            tabulate(
+                pd.read_sql_query(sql_sentence, self.db_connection),
+                headers='keys', tablefmt='psql', showindex=False))
