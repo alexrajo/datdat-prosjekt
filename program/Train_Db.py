@@ -470,10 +470,17 @@ class Train_Db_Manager:
                 pd.read_sql_query(sql_sentence, self.db_connection),
                 headers='keys', tablefmt='psql', showindex=False))
 
-    def get_train_routes(self, banestrekning_id: int):
+    def get_train_routes_on_banestrekning(self, banestrekning_id: int):
         sql_sentence = '''SELECT rutenavn, togruteId FROM togrute
         WHERE (banestrekningId = {banestrekning_id_input});
         '''.format(banestrekning_id_input=banestrekning_id)
+        print(
+            tabulate(
+                pd.read_sql_query(sql_sentence, self.db_connection),
+                headers='keys', tablefmt='psql', showindex=False))
+
+    def get_all_stops(self):
+        sql_sentence = "SELECT navn, jernbanestasjonId FROM jernbanestasjon;"
         print(
             tabulate(
                 pd.read_sql_query(sql_sentence, self.db_connection),

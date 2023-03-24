@@ -31,27 +31,33 @@ while True:
     if isRunningOnMacos:
         readline.parse_and_bind("tab: complete")
         readline.set_completer(completer)
-    # Venter på en kommando fra input
-    command = input('$ ')
+    # Venter på en kommando fra input, kommando skal ikke være case sensitive
+    command = input('$ ').lower()
 
     # Splitter opp kommandoen
     argument_list = command.split(" ")
-
-    # Kommando skal ikke være case sensitive
-    argument_list[0] = argument_list[0].lower()
 
     # Oppgave c), få ut alle togruter for en gitt jernbanestasjon på en gitt
     # ukedag
     # Tar inn en stasjon og en ukedag
     if argument_list[0] == "hent_togruter_for_stasjon":
-        if len(argument_list) != 3:
-            print(
-                "Bruk: hent_togruter_for_stasjon jernbanestasjonId ukedagNr " +
-                "(1: mandag - 7: søndag)")
-        else:
+        if len(argument_list) == 1:
+            print("Dette er eksisterende jernbaner")
+            db_manager.get_all_stops()
+            stopp: int = int(input("Velg en jernbanestasjonId: "))
+            ukedag: int = int(
+                input("Hvilken ukedag? (1: mandag - 7: søndag): "))
+            db_manager.get_train_routes(stopp, ukedag)
+
+        elif len(argument_list) == 3:
             db_manager.get_train_routes(
                 int(argument_list[1]),
                 int(argument_list[2]))
+
+        else:
+            print(
+                "Bruk: hent_togruter_for_stasjon jernbanestasjonId ukedagNr " +
+                "(1: mandag - 7: søndag) \nEller: hent_togruter_for_stasjon")
 
     # Oppgave d), togruter mellom start-stasjon og slutt-stasjon
     # Returnere alle tider samme dag og neste dag
@@ -106,7 +112,7 @@ while True:
 
             # Vis togruter på bane
             print("\nDette er togrutene som eksisterer på valgt banestrekning:")
-            db_manager.get_train_routes(banestrekning_id)
+            db_manager.get_train_routes_on_banestrekning(banestrekning_id)
             train_route_id = int(input("Skriv togruteId til togruten du vil " +
                                        "reise på: "))
 
@@ -129,12 +135,12 @@ while True:
                 Eller: finn_ledige_billetter
                 '''
             )
-
-        db_manager.find_tickets(
-            train_route_id,
-            start_station_seq_nr,
-            end_station_seq_nr
-        )
+        if (len(argument_list) == 4 or len(argument_list) == 1):
+            db_manager.find_tickets(
+                train_route_id,
+                start_station_seq_nr,
+                end_station_seq_nr
+            )
 
     elif argument_list[0] == "kjop_billett":
         if (len(argument_list) != 7):
@@ -203,7 +209,7 @@ while True:
         if len(argument_list) != 2:
             print("Bruk: finn_togruter_for_banestrekning banestrekning_id")
         else:
-            db_manager.get_train_routes(int(argument_list[1]))
+            db_manager.get_train_routes_on_banestrekning(int(argument_list[1]))
 
     # exit
     elif argument_list[0] in ["exit", "q", "quit", "slutt"]:
