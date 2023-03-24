@@ -485,3 +485,10 @@ class Train_Db_Manager:
             tabulate(
                 pd.read_sql_query(sql_sentence, self.db_connection),
                 headers='keys', tablefmt='psql', showindex=False))
+
+    def get_all_customers(self):
+        sql_sentence = "SELECT * FROM kunde;"
+        print(
+            tabulate(
+                pd.read_sql_query(sql_sentence, self.db_connection),
+                headers='keys', tablefmt='psql', showindex=False))

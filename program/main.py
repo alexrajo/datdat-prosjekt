@@ -1,4 +1,5 @@
 import Train_Db as tdb
+from messages import HELP, QUIT
 from utils import *
 import os
 from sys import platform
@@ -42,7 +43,7 @@ while True:
     # Tar inn en stasjon og en ukedag
     if argument_list[0] == "hent_togruter_for_stasjon":
         if len(argument_list) == 1:
-            print("Dette er eksisterende jernbaner")
+            print("Dette er eksisterende jernbanestasjoner")
             db_manager.get_all_stops()
             stopp: int = int(input("Velg en jernbanestasjonId: "))
             ukedag: int = int(
@@ -62,11 +63,23 @@ while True:
     # Oppgave d), togruter mellom start-stasjon og slutt-stasjon
     # Returnere alle tider samme dag og neste dag
     elif argument_list[0] == "hent_ruter_mellom_stasjoner":
-        if len(argument_list) != 4:
-            print(
-                "Bruk: hent_ruter_mellom_stasjoner startstasjonid " +
-                "sluttstasjonid yyyy-mm-dd")
-        else:
+
+        if len(argument_list) == 1:
+            print("Dette er eksisterende jernbanestasjoner")
+            db_manager.get_all_stops()
+            stopp_fra: int = int(
+                input("Velg en jernbanestasjonId du vil reise fra: "))
+            stopp_til: int = int(
+                input("Velg en jernbanestasjonId du vil reise til: "))
+            timestamp_string = input("Ønsket dato(yyyy-mm-dd): ")
+            format_string = '%Y-%m-%d'
+            dt_object = datetime.datetime.strptime(
+                timestamp_string, format_string)
+
+            db_manager.get_route_by_stations(
+                stopp_fra, stopp_til, dt_object, True)
+
+        elif len(argument_list) == 4:
             timestamp_string = argument_list[3]
             format_string = '%Y-%m-%d'
             dt_object = datetime.datetime.strptime(
@@ -79,12 +92,17 @@ while True:
                 True
             )
 
+        else:
+            print(
+                "Bruk: hent_ruter_mellom_stasjoner startstasjonid " +
+                "sluttstasjonid yyyy-mm-dd")
+
     # Oppgave e) registrer bruker
     elif argument_list[0] == "registrer_bruker":
         if len(argument_list) < 5:
             print(
                 "Bruk: registrer_bruker email phone_number etternavn" +
-                " fornavn <optional x antall mellomnavn>" +
+                " fornavn <optional x antall mellomnavn>\n" +
                 "Eksempel: registrer_bruker ex@mail.com 40060200 nordmann " +
                 "ola mellomnavn annetmellomnavn")
         else:
@@ -145,7 +163,7 @@ while True:
     elif argument_list[0] == "kjop_billett":
         if (len(argument_list) != 7):
             print(
-                "Bruk: kjop_billett vogn_id plass_nr sekvens_nr_start"
+                "Bruk: kjop_billett vogn_id plass_nr sekvens_nr_start "
                 + "sekvens_nr_ende kundenr togruteforekomst_id\n\n" +
                 "Om du er usikker på hva disse feltene skal være, bruk:\n" +
                 "finn_ledige_billetter"
@@ -161,13 +179,16 @@ while True:
 
     # Oppgave h) info om tidligere kjøp for fremtidige reiser
     elif argument_list[0] == "hent_ordre":
-        if len(argument_list) != 2:
-            print(
-                "Bruk: hent_ordre kundenummer")
+        if len(argument_list) == 2:
+            db_manager.get_orders(argument_list[1])
+        elif len(argument_list) == 1:
+            print("Registrerte brukere:")
+            db_manager.get_all_customers()
+            kunde_nr: int = int(
+                input("Kundenr du ønsker å hente ordre fra: "))
+            db_manager.get_orders(kunde_nr)
         else:
-            db_manager.get_orders(
-                argument_list[1],
-            )
+            print("Bruk: hent_ordre kundenummer")
 
     # lage ny vognmodell
     elif argument_list[0] == "ny_vognmodell":
@@ -213,48 +234,11 @@ while True:
 
     # exit
     elif argument_list[0] in ["exit", "q", "quit", "slutt"]:
-        print("Avslutter TogDB CLI...")
+        print(QUIT)
         break
 
     elif argument_list[0] in ["help", "h", "", "hjelp"]:
-        print("""
-TogDB CLI Hjelp
-#################
-
-slutt,
-exit,
-q,
-quit - avslutter TogDB CLI
-
-help,
-h,
-,
-hjelp - viser hjelp
-
-hent_togruter_for_stasjon - skriver alle togruter som går gjennom en 
-stasjon på en gitt ukedag. 
-
-hent_ruter_mellom_stasjoner - skriver alle togruter som går mellom
-to stasjoner
-
-registrer_bruker - registrerer en ny bruker
-
-finn_ledige_billetter - finner alle potensielle ledige billetter mellom 
-to stasjoner på en spesifikk togrute
-
-kjop_billett - kjøper en billett
-
-hent_ordre - henter ordrer i fremtiden for en bruker.
-
-ny_vognmodell - lag ny vognmodell
-
-finn_banestrekninger - finner alle banestrekninger på jernbanenettverket
-
-finn_togruter_for_banestrekning - finner alle togruter for en gitt banestrekning
-
-finn_jernbanestasjon_for_togrute - finner alle jernbanestasjoner for en gitt 
-togrute
-""")
+        print(HELP)
 
     else:
         print("Kommando ikke gjenkjent. Skriv \"hjelp\" for hjelp.")
