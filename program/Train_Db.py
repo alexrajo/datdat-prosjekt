@@ -188,6 +188,33 @@ class Train_Db_Manager:
             current_ukedagNr=current_weekday
         ), self.db_connection), headers='keys', tablefmt='psql', showindex=False))
 
+    def get_tickets_from_order(self, order_nr: int):
+        print(tabulate(pd.read_sql_query("""
+            SELECT
+                billettNr AS BillettNr,
+                COALESCE(date(strftime('%Y-%m-%d', aar || '-01-01', '+' || (ukedagNr+(ukeNr-1)*7) || ' day')), 'N/A') AS Dato,
+                rutenavn AS Rutenavn,
+                vogn.vognNr AS VognNr,
+                plassNr AS PlassNr,
+                avgangsstopp.tidspunkt AS 'Avgang (kl.)',
+                avgang_jbs.navn AS 'Fra stasjon',
+                ankomststopp.tidspunkt AS 'Kommer fram (kl.)',
+                ankomst_jbs.navn AS 'Til stasjon'
+            FROM billett
+            INNER JOIN kundeOrdre USING (ordreNr)
+            INNER JOIN togruteforekomst USING (forekomstId)
+            INNER JOIN togrute USING (togruteId)
+            INNER JOIN stopp AS avgangsstopp ON avgangsstopp.sekvensnr = billett.sekvensNrStart AND avgangsstopp.togruteId = togrute.togruteId
+            INNER JOIN stopp AS ankomststopp ON ankomststopp.sekvensnr = billett.sekvensNrEnde AND ankomststopp.togruteId = togrute.togruteId
+            INNER JOIN banestrekning USING (banestrekningId)
+            INNER JOIN stasjonPaaStrekning AS sps_av ON sps_av.sekvensnr = avgangsstopp.sekvensnr
+            INNER JOIN stasjonPaaStrekning AS sps_an ON sps_an.sekvensnr = ankomststopp.sekvensnr
+            INNER JOIN jernbanestasjon AS avgang_jbs ON avgang_jbs.jernbanestasjonId = sps_av.jernbanestasjonId
+            INNER JOIN jernbanestasjon AS ankomst_jbs ON ankomst_jbs.jernbanestasjonId = sps_an.jernbanestasjonId
+            INNER JOIN vogn USING (vognId)
+            WHERE ordreNr = {input_ordreNr};
+        """.format(input_ordreNr=order_nr), self.db_connection), headers='keys', tablefmt='psql', showindex=False))
+
     def get_route_by_stations(
         self, start_station_id: int, end_station_id: int,
             datetime: datetime, arrives: bool):

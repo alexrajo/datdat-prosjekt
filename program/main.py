@@ -238,6 +238,10 @@ while True:
             kunde_nr: int = int(
                 input("Kundenr du ønsker å hente ordre fra: "))
             db_manager.get_orders(kunde_nr)
+            do_look_closer = input("Vil du se bilettene dine på en ordre? (y/n): ")
+            if (do_look_closer.lower() == "y"):
+                ordre_nr = input("OrdreNr for ordre du ønsker å se billettene på: ")
+                db_manager.get_tickets_from_order(ordre_nr)
         else:
             print("Bruk: hent_ordre kundenummer")
 
@@ -271,7 +275,7 @@ while True:
         if len(argument_list) != 2:
             print("Bruk: finn_jernbanestasjon_for_togrute togrute_id")
         else:
-            db_manager.get_sequence_n_station_id(int(argument_list[1]))
+            raise Exception("Unimplemented")
 
     # Finn banestrekninger
     elif argument_list[0] == "finn_banestrekninger":
