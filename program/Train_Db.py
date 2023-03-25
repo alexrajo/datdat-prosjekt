@@ -341,11 +341,11 @@ class Train_Db_Manager:
             """
 
                 SELECT togruteId
-                FROM togruteforekomst WHERE togruteId = {train_route_instance_id}
+                FROM togruteforekomst WHERE forekomstId = {train_route_instance_id}
                 
             """.format(train_route_instance_id=train_route_instance_id))
         row = self.db_cursor.fetchone()
-        if row is None: return print("Billett kan ikke kjøpes")
+        if row is None: return print("Det finnes ingen billetter for denne turen!")
         togrute = row[0]
         listOfTickets = self.find_tickets(togrute, sequence_n_start, sequence_n_end)
         foundTicket = False
@@ -356,7 +356,7 @@ class Train_Db_Manager:
             if harPlass and harVogn and harForekomst:
                 foundTicket = True
                 break
-        if not foundTicket: return print("Billetten du vil kjøpe finnes ikke!")
+        if not foundTicket: return print("Billetten er ikke ledig / finnes ikke")
         self.execute(
             """
                 SELECT tidspunkt, togruteforekomst.ukedagNr, ukeNr, aar FROM togruteforekomst 
