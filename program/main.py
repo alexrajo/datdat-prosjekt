@@ -32,7 +32,7 @@ db_manager = tdb.Train_Db_Manager(dir_path + "/../data/tog.db")
 print("TogDB CLI er klar for bruk. Skriv 'hjelp' / 'h' for mer informasjon.")
 while True:
     if isRunningOnMacos:
-        readline.parse_and_bind("tab: complete")
+        readline.parse_and_bind('bind ^I rl_complete')
         readline.set_completer(completer)
     # Venter på en kommando fra input, kommando skal ikke være case sensitive
     command = input('$ ').lower()
