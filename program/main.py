@@ -41,14 +41,14 @@ while True:
     # Splitter opp kommandoen
     argument_list = command.split(" ")
 
-    def finn_ledige_billetter():
+    def finn_ledige_billetter(arglist):
         banestrekning_id: int
         train_route_id: int
         start_station_seq_nr: int
         end_station_seq_nr: int
 
         def proceed():
-            if (len(argument_list) == 4 or len(argument_list) == 1):
+            if (len(arglist) == 4 or len(arglist) == 1):
                 available_tickets = db_manager.find_tickets(
                     train_route_id,
                     start_station_seq_nr,
@@ -68,7 +68,7 @@ while True:
                   ))
 
 
-        if len(argument_list) == 1:
+        if len(arglist) == 1:
             # Vis baner
             print("\nDette er banestrekningene som eksisterer på jernbanenettet:")
             db_manager.get_banestrekninger()
@@ -91,10 +91,10 @@ while True:
 
             proceed()
 
-        elif len(argument_list) == 4:
-            train_route_id = argument_list[1]
-            start_station_seq_nr = argument_list[2]
-            end_station_seq_nr = argument_list[3]
+        elif len(arglist) == 4:
+            train_route_id = arglist[1]
+            start_station_seq_nr = arglist[2]
+            end_station_seq_nr = arglist[3]
             proceed()
 
         else:
@@ -183,7 +183,7 @@ while True:
 
     # Oppgave g) finn ledige billetter og kjøp
     elif argument_list[0] == "finn_ledige_billetter":
-        finn_ledige_billetter()
+        finn_ledige_billetter(argument_list)
 
     elif argument_list[0] == "kjop_billett":
         if len(argument_list) == 1:
@@ -195,12 +195,12 @@ while True:
             # Resten av attributtene
             attr_args = ""
             while len(attr_args.split(" ")) != 5 and attr_args != "finn_ledige_billetter":
-                print("\nSkriv inn resten av informasjonen\n"
-                    +"Vet du ikke hvor du finner denne? Bruk kommando: finn_ledige_billetter\n")
-                attr_args = input("vogn_id plass_nr sekvens_nr_start sekvens_nr_ende togruteforekomst_id: ")
+                print("\nSkriv inn vogn_id plass_nr sekvens_nr_start sekvens_nr_ende togruteforekomst_id\n"
+                    +"Vet du ikke hva du skal skrive inn? Bruk kommando: finn_ledige_billetter\n")
+                attr_args = input("Skriv inn: ")
 
             if (attr_args == "finn_ledige_billetter"):
-                finn_ledige_billetter()
+                finn_ledige_billetter(["finn_ledige_billetter"])
             else:
                 attr_args = attr_args.split(" ")
                 db_manager.create_ticket(
@@ -211,10 +211,11 @@ while True:
                     kunde_nr,
                     int(attr_args[4]))
 
-        elif len(argument_list != 7):
+        elif len(argument_list) != 7:
             print(
                 "Bruk: kjop_billett vogn_id plass_nr sekvens_nr_start " +
-                "sekvens_nr_ende kundenr togruteforekomst_id\n\n" +
+                "sekvens_nr_ende kundenr togruteforekomst_id\n" +
+                "Eller: kjop_billett\n\n" +
                 "Om du er usikker på hva disse feltene skal være, bruk:\n" +
                 "finn_ledige_billetter"
             )
