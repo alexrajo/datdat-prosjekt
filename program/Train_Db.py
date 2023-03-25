@@ -339,6 +339,26 @@ class Train_Db_Manager:
         """
         self.execute(
             """
+
+                SELECT togruteId
+                FROM togruteforekomst WHERE togruteId = {train_route_instance_id}
+                
+            """.format(train_route_instance_id=train_route_instance_id))
+        row = self.db_cursor.fetchone()
+        if row is None: return print("Billett kan ikke kjøpes")
+        togrute = row[0]
+        listOfTickets = self.find_tickets(togrute, sequence_n_start, sequence_n_end)
+        foundTicket = False
+        for ticket in listOfTickets:
+            harPlass = ticket[0] == placement_n
+            harVogn = ticket[1] == cart_id
+            harForekomst = ticket[-1] == train_route_instance_id
+            if harPlass and harVogn and harForekomst:
+                foundTicket = True
+                break
+        if not foundTicket: return print("Billetten du vil kjøpe finnes ikke!")
+        self.execute(
+            """
                 SELECT tidspunkt, togruteforekomst.ukedagNr, ukeNr, aar FROM togruteforekomst 
                 INNER JOIN ukedag USING (togruteId) 
                 INNER JOIN stopp USING (togruteId)
