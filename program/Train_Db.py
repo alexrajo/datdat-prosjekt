@@ -89,9 +89,7 @@ class Train_Db_Manager:
             SELECT DISTINCT 
                 vogn_plasser.plassNr, 
                 vognId,
-                aar,
-                ukeNr,
-                ukedagNr,
+                COALESCE(date(strftime('%Y-%m-%d', aar || '-01-01', '+' || (ukedagNr+(ukeNr-1)*7) || ' day')), 'N/A') AS dato,
                 vognModell.modellnavn AS vogntype,
                 togruteforekomstMulig.forekomstId AS togruteforekomstId
             FROM togruteforekomst AS togruteforekomstMulig
@@ -148,13 +146,6 @@ class Train_Db_Manager:
             available_tickets.extend(avtickets)
 
         pd.set_option("display.max_rows", None)
-        print(
-            tabulate(
-                pd.DataFrame(
-                    available_tickets,
-                    columns=["plassNr", "vognId", "aar", "ukeNr", "ukedagNr",
-                             "vogntype", "togruteforekomstId"]),
-                headers='keys', tablefmt='psql', showindex=False))
         return available_tickets
 
     def get_orders(self, customer_n: int):

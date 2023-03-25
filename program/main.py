@@ -4,6 +4,8 @@ from utils import *
 import os
 from sys import platform
 import datetime
+import pandas as pd
+from tabulate import tabulate
 
 isRunningOnMacos = platform.startswith("darwin")
 if isRunningOnMacos:  # darwin = macos
@@ -121,6 +123,27 @@ while True:
         start_station_seq_nr: int
         end_station_seq_nr: int
 
+        def proceed():
+            if (len(argument_list) == 4 or len(argument_list) == 1):
+                available_tickets = db_manager.find_tickets(
+                    train_route_id,
+                    start_station_seq_nr,
+                    end_station_seq_nr
+                )
+                print(
+                    tabulate(
+                        pd.DataFrame(
+                            available_tickets,
+                            columns=["plassNr", "vognId", "dato",
+                                    "vogntype", "togruteforekomstId"]),
+                        headers='keys', tablefmt='psql', showindex=False))
+
+            print("sekvensnr valgt start: {sekstart}\n".format(sekstart=start_station_seq_nr) +
+                  "sekvensnr valgt ende: {sekende}".format(
+                      sekende=end_station_seq_nr
+                  ))
+
+
         if len(argument_list) == 1:
             # Vis baner
             print("\nDette er banestrekningene som eksisterer på jernbanenettet:")
@@ -141,10 +164,14 @@ while True:
                                              "du vil reise fra: "))
             end_station_seq_nr = int(input("Skriv sekvensNr til stasjonen " +
                                            "du vil reise til: "))
+
+            proceed()
+
         elif len(argument_list) == 4:
             train_route_id = argument_list[1]
             start_station_seq_nr = argument_list[2]
             end_station_seq_nr = argument_list[3]
+            proceed()
 
         else:
             print(
@@ -153,18 +180,6 @@ while True:
                 Eller: finn_ledige_billetter
                 '''
             )
-        if (len(argument_list) == 4 or len(argument_list) == 1):
-            db_manager.find_tickets(
-                train_route_id,
-                start_station_seq_nr,
-                end_station_seq_nr
-            )
-
-        print("sekvensnr valgt start: {sekstart}\n" +
-              "sekvensnr valgt ende: {sekende}".format(
-                  sekstart=start_station_seq_nr,
-                  sekende=end_station_seq_nr
-              ))
 
     elif argument_list[0] == "kjop_billett":
         if (len(argument_list) != 7):
