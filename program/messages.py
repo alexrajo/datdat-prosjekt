@@ -66,8 +66,8 @@ togrute
 
 
     "kjop_billett":
-    "Bruk: kjop_billett vogn_id plass_nr sekvens_nr_start " +
-    "sekvens_nr_ende kundenr togruteforekomst_id\n\n" +
+    "Bruk: kjop_billett plass_nr vogn_id togruteforekomst_id sekvens_nr_start" +
+    " sekvens_nr_ende kundenr\n\n" +
     "Om du er usikker på hva disse feltene skal være, bruk:\n" +
     "finn_ledige_billetter",
 

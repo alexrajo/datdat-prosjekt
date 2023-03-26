@@ -89,9 +89,9 @@ class Train_Db_Manager:
             SELECT DISTINCT 
                 vogn_plasser.plassNr, 
                 vognId,
+                togruteforekomstMulig.forekomstId AS togruteforekomstId,
                 COALESCE(date(strftime('%Y-%m-%d', aar || '-01-01', '+' || (ukedagNr+(ukeNr-1)*7) || ' day')), 'N/A') AS dato,
-                vognModell.modellnavn AS vogntype,
-                togruteforekomstMulig.forekomstId AS togruteforekomstId
+                vognModell.modellnavn AS vogntype
             FROM togruteforekomst AS togruteforekomstMulig
             INNER JOIN togrute USING(togruteId)
             INNER JOIN vogn USING(togruteId)
@@ -137,7 +137,8 @@ class Train_Db_Manager:
                         )
                     )
                 )
-            );'''.format(
+            )
+            '''.format(
                 input_vognModellId=cart_model_id,
                 input_togruteId=train_route_id,
                 input_sekvensNrStart=start_station_seq_nr,
@@ -378,7 +379,8 @@ class Train_Db_Manager:
             """.format(train_route_instance_id=train_route_instance_id))
         row = self.db_cursor.fetchone()
         if row is None:
-            return print("Det finnes ingen billetter for denne turen!")
+            print("Det finnes ingen billetter for denne turen!")
+            return
         togrute = row[0]
         listOfTickets = self.find_tickets(
             togrute, sequence_n_start, sequence_n_end)
