@@ -291,20 +291,22 @@ class Train_Db_Manager:
             AND (
                 aar = {input_aar}
                 AND (
-                    ukeNr = {input_ukeNr} AND (
+                    (
+                        ukeNr = {input_ukeNr} AND (
                         ukedagNr + startstopp.dagOffset = {input_ukedagNr}
                         OR
                         ukedagNr + startstopp.dagOffset = {input_ukedagNr} + 1
+                        )
                     )
-                ) 
-                OR
-                (ukeNr = {input_ukeNr} - 1 AND (ukedagNr-1 + startstopp.dagOffset) % 7 + 1 = {input_ukedagNr})
-                OR (
-                    {input_ukedagNr} = 7 
-                    AND 
-                    ukeNr = {input_ukeNr} + 1 
-                    AND 
-                    (ukedagNr-1 + startstopp.dagOffset) % 7 + 1 = 1
+                    OR
+                    (ukeNr = {input_ukeNr} - 1 AND (ukedagNr-1 + startstopp.dagOffset) % 7 + 1 = {input_ukedagNr} AND ukedagNr != {input_ukedagNr})
+                    OR (
+                        {input_ukedagNr} = 7 
+                        AND 
+                        ukeNr = {input_ukeNr} + 1 
+                        AND 
+                        (ukedagNr-1 + startstopp.dagOffset) % 7 + 1 = 1
+                    )
                 )
             )
             OR (
