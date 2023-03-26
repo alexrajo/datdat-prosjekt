@@ -410,15 +410,15 @@ class Train_Db_Manager:
                     FROM togruteforekomst WHERE forekomstId = {train_route_instance_id}
                     
                 """.format(train_route_instance_id=train_route_instance_id))
-            row = self.db_cursor.fetchone()
-            if row is None: return print("En av billettene finnes ikke for denne turen")
-            togrute = row[0]
-            listOfTickets = self.find_tickets(togrute, sequence_n_start, sequence_n_end)
+            found_togrute_row = self.db_cursor.fetchone()
+            if found_togrute_row is None: return print("En av billettene finnes ikke for denne turen")
+            found_togruteId = found_togrute_row[0]
+            listOfTickets = self.find_tickets(found_togruteId, sequence_n_start, sequence_n_end)
             foundTicket = False
             for ticket in listOfTickets:
                 harPlass = ticket[0] == placement_n
                 harVogn = ticket[1] == cart_id
-                harForekomst = ticket[-1] == train_route_instance_id
+                harForekomst = ticket[2] == train_route_instance_id
                 if harPlass and harVogn and harForekomst:
                     foundTicket = True
                     break
@@ -473,17 +473,18 @@ class Train_Db_Manager:
             placement_n = cartPlacementSeq[1]
             sequence_n_start = cartPlacementSeq[2]
             sequence_n_end = cartPlacementSeq[3]
-            listOfRecords.append((res_order.lastrowid, cart_id, placement_n, sequence_n_start, sequence_n_end))
+            listOfRecords.append((res_order.lastrowid, found_togruteId, cart_id, placement_n, sequence_n_start, sequence_n_end))
         self.db_cursor.executemany(
             """
             INSERT INTO billett(
-                ordreNr, 
+                ordreNr,
+                togruteId, 
                 vognId, 
                 plassNr, 
                 sekvensNrStart, 
                 sekvensNrEnde
             )
-            VALUES (?,?,?,?,?)
+            VALUES (?,?,?,?,?,?)
             """, listOfRecords)
         self.db_connection.commit()
         return True
