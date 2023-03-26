@@ -27,7 +27,7 @@ CREATE TABLE billett (
     billettNr INTEGER PRIMARY KEY AUTOINCREMENT,
     ordreNr INTEGER NOT NULL,
     togruteId INTEGER NOT NULL,
-    vognId INTEGER NOT NULL,
+    vognId INTEGER,
     plassNr INTEGER NOT NULL,
     sekvensNrStart INTEGER NOT NULL,
     sekvensNrEnde INTEGER NOT NULL,
