@@ -312,6 +312,7 @@ INSERT INTO togruteforekomst (togruteId, ukedagNr, ukeNr, aar) VALUES (2, 1, 15,
 
 INSERT INTO togruteforekomst (togruteId, ukedagNr, ukeNr, aar) VALUES (2, 1, 12, 2023);
 INSERT INTO togruteforekomst (togruteId, ukedagNr, ukeNr, aar) VALUES (2, 7, 12, 2023);
+INSERT INTO togruteforekomst (togruteId, ukedagNr, ukeNr, aar) VALUES (2, 6, 12, 2023);
 -- Togrute 3
 INSERT INTO togruteforekomst (togruteId, ukedagNr, ukeNr, aar) VALUES (3, 1, 14, 2023);
 INSERT INTO togruteforekomst (togruteId, ukedagNr, ukeNr, aar) VALUES (3, 2, 14, 2023);

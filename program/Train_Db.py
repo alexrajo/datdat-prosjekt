@@ -110,7 +110,7 @@ class Train_Db_Manager:
                 AND startstopp.sekvensNr = {input_sekvensNrStart}
                 AND endestopp.sekvensNr = {input_sekvensNrEnde}
             )
-            AND COALESCE(date(strftime('%Y-%m-%d', aar || '-01-01', '+' || (ukedagNr+(ukeNr-1)*7) || ' day')), date('now')) >= date('now')
+            AND COALESCE(date(strftime('%Y-%m-%d', aar || '-01-01', '+' || (ukedagNr+(ukeNr-1)*7+endestopp.dagOffset) || ' day')), date('now')) >= date('now')
             AND NOT EXISTS (
                 SELECT * FROM billett
                 INNER JOIN kundeOrdre AS bestiltKundeOrdre USING(ordreNr)
