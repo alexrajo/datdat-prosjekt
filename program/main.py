@@ -30,7 +30,7 @@ dir_path = os.path.dirname(os.path.realpath(__file__))
 db_manager = tdb.Train_Db_Manager(dir_path + "/../data/tog.db")
 
 
-def kjop_billett(arglist): 
+def kjop_billett(arglist):
     # Vis kunder
     print("\nRegistrerte kunder:")
     db_manager.get_all_customers()
@@ -39,18 +39,22 @@ def kjop_billett(arglist):
     print("\n\nDu kan nå kjøpe biletter\n\n")
     togruteforekomst = int(input("\n\nSkriv inn togruteforekomstId: "))
     # Resten av attributtene
-    print("\n\nTrykk enter uten tekst for å fortsette orderen\n\n")
+    print("\n\nSkriv \"ferdig\" for å ferdigstille bestilling. Eller skriv ingenting\n\n")
     tickets = []
     while 1:
-        ticket = input("Skriv vogn_id plass_nr sekvens_nr_start sekvens_nr_ende ").split(" ")
+        ticket = input(
+            "Skriv vogn_id plass_nr sekvens_nr_start sekvens_nr_ende ").split(
+            " ")
+        if ticket[0].lower() == "ferdig":
+            break
         print(ticket)
         if len(ticket) == 1 and ticket[0] == '':
             break
         if len(ticket) != 4:
-            print("\n\nFeil format.\n"
-                  +"Skriv vogn_id plass_nr sekvens_nr_start sekvens_nr_ende \n\n"
-                  +"Vet du ikke hva du skal skrive inn? Bruk kommando: finn_ledige_billetter\n"
-                  )
+            print(
+                "\n\nFeil format.\n" +
+                "Skriv vogn_id plass_nr sekvens_nr_start sekvens_nr_ende \n\n" +
+                "Vet du ikke hva du skal skrive inn? Bruk kommando: finn_ledige_billetter\n")
             continue
         else:
             tickets.append(ticket)
@@ -61,12 +65,14 @@ def kjop_billett(arglist):
             int(togruteforekomst))
     else:
         print("Du har ikke kjøpt noen billetter")
-        
+
+
 def finn_ledige_billetter(arglist):
     banestrekning_id: int
     train_route_id: int
     start_station_seq_nr: int
     end_station_seq_nr: int
+
     def proceed():
         if (len(arglist) == 4 or len(arglist) == 1):
             available_tickets = db_manager.find_tickets(
