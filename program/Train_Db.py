@@ -317,7 +317,7 @@ class Train_Db_Manager:
             INNER JOIN ukedag USING (togruteId) 
             INNER JOIN stopp USING (togruteId)
             INNER JOIN stasjonPaaStrekning USING (banestrekningId, sekvensNr) 
-            WHERE ukedag.ukedagNr = {ukedagNr} 
+            WHERE ukedag.ukedagNr = (({ukedagNr}-1) + stopp.dagOffset) % 7 + 1
             AND jernbanestasjonId = {jernbanestasjonId};
         """.format(ukedagNr=weekday_n, jernbanestasjonId=station_id),
             self.db_connection), headers='keys', tablefmt='psql', showindex=False))
