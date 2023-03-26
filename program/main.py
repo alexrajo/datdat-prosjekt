@@ -47,7 +47,6 @@ def kjop_billett(arglist):
             " ")
         if ticket[0].lower() == "ferdig":
             break
-        print(ticket)
         if len(ticket) == 1 and ticket[0] == '':
             break
         if len(ticket) != 4:
@@ -137,10 +136,11 @@ while True:
         # readline.parse_and_bind('bind ^I rl_complete')
         readline.set_completer(completer)
     # Venter på en kommando fra input, kommando skal ikke være case sensitive
-    command = input('$ ').lower()
+    command = input('$ ')
 
     # Splitter opp kommandoen
     argument_list = command.split(" ")
+    argument_list[0] = argument_list[0].lower()
 
     # Oppgave c), få ut alle togruter for en gitt jernbanestasjon på en gitt
     # ukedag
@@ -209,6 +209,7 @@ while True:
 
         else:
             first_name = ' '.join(argument_list[4:])
+            print(first_name)
             db_manager.register_user(
                 first_name,
                 argument_list[3],
@@ -240,7 +241,37 @@ while True:
             if (do_look_closer.lower() == "y"):
                 ordre_nr = input(
                     "OrdreNr for ordre du ønsker å se billettene på: ")
-                db_manager.get_tickets_from_order(ordre_nr)
+                tickets = db_manager.get_tickets_from_order(ordre_nr)
+
+                formatted_tickets = []
+                for ticket in tickets:
+                    aar = ticket[1]
+                    uke_nr = ticket[2]
+                    ukedag_nr = ticket[3]
+
+                    new_fticket = (
+                        ticket[0],
+                        str(get_date_from_weekinfo(aar, uke_nr, ukedag_nr)),
+                        ticket[4],
+                        ticket[5],
+                        ticket[6],
+                        ticket[7],
+                        ticket[8],
+                        ticket[9],
+                        ticket[10]
+                    )
+                    formatted_tickets.append(new_fticket)
+
+                print(
+                    tabulate(
+                    pd.DataFrame(
+                        formatted_tickets,
+                        columns=["BillettNr", "Dato", "Rutenavn",
+                                 "VognNr", "PlassNr", "Avgang (kl.)", 
+                                 "Fra stasjon", "Kommer fram (kl.)", 
+                                 "Til stasjon"]),
+                    headers='keys', tablefmt='psql', showindex=False)
+                )
         else:
             print("Bruk: hent_ordre kundenummer")
 

@@ -1,5 +1,5 @@
 from sqlite3 import Cursor, Connection, connect
-from datetime import datetime
+from datetime import datetime, timedelta
 import pandas as pd
 from tabulate import tabulate
 import math
@@ -17,6 +17,7 @@ class Train_Db_Manager:
     def __init__(self, db_location: str):
         self.db_connection = connect(db_location)
         self.db_cursor = self.db_connection.cursor()
+        self.execute("PRAGMA foreign_keys = ON;")
 
     def __del__(self):
         self.db_connection.close()
@@ -91,7 +92,7 @@ class Train_Db_Manager:
                 vogn_plasser.plassNr, 
                 vognId,
                 togruteforekomstMulig.forekomstId AS togruteforekomstId,
-                COALESCE(date(strftime('%Y-%m-%d', aar || '-01-01', '+' || (ukedagNr+(ukeNr-1)*7) || ' day')), 'N/A') AS dato,
+                COALESCE(date(strftime('%Y-%m-%d', aar || '-01-01', '+' || (ukedagNr+(ukeNr-1)*7+startstopp.dagOffset) || ' day')), 'N/A') AS avgangsdato,
                 vognModell.modellnavn AS vogntype
             FROM togruteforekomst AS togruteforekomstMulig
             INNER JOIN togrute USING(togruteId)
@@ -109,7 +110,7 @@ class Train_Db_Manager:
                 AND startstopp.sekvensNr = {input_sekvensNrStart}
                 AND endestopp.sekvensNr = {input_sekvensNrEnde}
             )
-            AND COALESCE(date(strftime('%Y-%m-%d', aar || '-01-01', '+' || (ukedagNr+(ukeNr-1)*7) || ' day')), date('now')) >= date('now')
+            AND COALESCE(date(strftime('%Y-%m-%d', aar || '-01-01', '+' || (ukedagNr+(ukeNr-1)*7+endestopp.dagOffset) || ' day')), date('now')) >= date('now')
             AND NOT EXISTS (
                 SELECT * FROM billett
                 INNER JOIN kundeOrdre AS bestiltKundeOrdre USING(ordreNr)
@@ -182,7 +183,7 @@ class Train_Db_Manager:
             OR (
             aar = {current_aar} AND ukeNr > {current_ukeNr}
             ) OR (
-            aar = {current_aar} AND ukeNr = {current_ukeNr} AND ukedagNr > {current_ukedagNr}
+            aar = {current_aar} AND ukeNr = {current_ukeNr} AND ukedagNr >= {current_ukedagNr}
             )
         );
         """.format(
@@ -196,10 +197,12 @@ class Train_Db_Manager:
               headers='keys', tablefmt='psql', showindex=False))
 
     def get_tickets_from_order(self, order_nr: int):
-        print(tabulate(pd.read_sql_query("""
+        self.execute("""
             SELECT
                 billettNr AS BillettNr,
-                COALESCE(date(strftime('%Y-%m-%d', aar || '-01-01', '+' || (ukedagNr+(ukeNr-1)*7) || ' day')), 'N/A') AS Dato,
+                aar,
+                ukeNr,
+                ukedagNr,
                 rutenavn AS Rutenavn,
                 vogn.vognNr AS VognNr,
                 plassNr AS PlassNr,
@@ -220,7 +223,9 @@ class Train_Db_Manager:
             INNER JOIN jernbanestasjon AS ankomst_jbs ON ankomst_jbs.jernbanestasjonId = sps_an.jernbanestasjonId
             INNER JOIN vogn USING (vognId)
             WHERE ordreNr = {input_ordreNr};
-        """.format(input_ordreNr=order_nr), self.db_connection), headers='keys', tablefmt='psql', showindex=False))
+        """.format(input_ordreNr=order_nr))
+
+        return self.db_cursor.fetchall()
 
     def get_route_by_stations(
         self, start_station_id: int, end_station_id: int,
@@ -316,7 +321,7 @@ class Train_Db_Manager:
             INNER JOIN ukedag USING (togruteId) 
             INNER JOIN stopp USING (togruteId)
             INNER JOIN stasjonPaaStrekning USING (banestrekningId, sekvensNr) 
-            WHERE ukedag.ukedagNr = {ukedagNr} 
+            WHERE ukedag.ukedagNr = (({ukedagNr}-1) + stopp.dagOffset) % 7 + 1
             AND jernbanestasjonId = {jernbanestasjonId};
         """.format(ukedagNr=weekday_n, jernbanestasjonId=station_id),
             self.db_connection), headers='keys', tablefmt='psql', showindex=False))
@@ -400,7 +405,6 @@ class Train_Db_Manager:
                 if (cart_id == cart_id2 and placement_n == placement_n2 and hasOverlap):
                     return print(
                         "Ugyldig bestilling! Noen av billettene overlapper hverandre")
-                print(cartPlacementSeq1, cartPlacementSeq2)
 
         for cartPlacementSeq in cartsPlacementsAndSequences:
             cart_id = int(cartPlacementSeq[0])
@@ -432,7 +436,7 @@ class Train_Db_Manager:
                     "En av billettene du vil kjøpe er ikke ledig / finnes ikke")
             self.execute(
                 """
-                    SELECT tidspunkt, togruteforekomst.ukedagNr, ukeNr, aar FROM togruteforekomst 
+                    SELECT tidspunkt, togruteforekomst.ukedagNr, ukeNr, aar, dagOffset FROM togruteforekomst 
                     INNER JOIN ukedag USING (togruteId) 
                     INNER JOIN stopp USING (togruteId)
                     WHERE (
@@ -445,14 +449,14 @@ class Train_Db_Manager:
             row = self.db_cursor.fetchone()
             year = row[3]
             week_number = row[2]
-            day_number = str(int(row[1])-1)
+            day_number = str(int(row[1]))
+            dayOffset = row[4]
             time_object = datetime.strptime(str(row[0]), '%H:%M:%S').time()
             date_object = datetime.strptime(
-                f"{year}-{week_number}-{day_number}", "%Y-%W-%w").date()
+                f"{year}-{week_number}-{day_number}", "%Y-%W-%u").date()
             combined_object = datetime.combine(date_object, time_object)
-            print(combined_object)
             current_time = datetime.now()
-            if (current_time > combined_object):
+            if (current_time > combined_object + timedelta(days=dayOffset)):
                 return print("The train has already passed the start-station")
             self.execute(
                 """
@@ -496,7 +500,8 @@ class Train_Db_Manager:
             VALUES (?,?,?,?,?,?)
             """, listOfRecords)
         self.db_connection.commit()
-        return True
+        return print("\n\nSuksess! Vi ønsker deg/dere en god tur!\n\n")
+        
 
     def create_cart_model(self, modelname, isSittingCart, seatRows, seatsPerRow,
                           compartments):
@@ -533,12 +538,15 @@ class Train_Db_Manager:
         sql_sentence = '''
         SELECT 
         jernbanestasjon.navn AS stasjonsnavn,
-        sekvensNr
+        stopp.sekvensnr AS sekvensnr
         FROM togrute 
         INNER JOIN stopp USING(togruteId,banestrekningId) 
         INNER JOIN stasjonPaaStrekning USING(banestrekningId,sekvensnr) 
         INNER JOIN jernbanestasjon USING (jernbanestasjonId) 
-        WHERE togruteId = {togrute_id_input};
+        WHERE togruteId = {togrute_id_input}
+        ORDER BY 
+            CASE WHEN motHovedretning=0 THEN stopp.sekvensnr END ASC,
+            CASE WHEN motHovedretning=1 THEN stopp.sekvensnr END DESC;
         '''.format(togrute_id_input=togrute_id)
 
         print(

@@ -27,7 +27,7 @@ CREATE TABLE billett (
     billettNr INTEGER PRIMARY KEY AUTOINCREMENT,
     ordreNr INTEGER NOT NULL,
     togruteId INTEGER NOT NULL,
-    vognId INTEGER NOT NULL,
+    vognId INTEGER,
     plassNr INTEGER NOT NULL,
     sekvensNrStart INTEGER NOT NULL,
     sekvensNrEnde INTEGER NOT NULL,
@@ -192,6 +192,7 @@ CREATE TABLE stopp (
     sekvensnr INTEGER,
     banestrekningId INTEGER NOT NULL,
     tidspunkt TIME NOT NULL,
+    dagOffset INTEGER DEFAULT 0 NOT NULL,
 
     PRIMARY KEY (togruteId, sekvensNr),
 
@@ -235,26 +236,26 @@ INSERT INTO togrute (operatorId, banestrekningId, rutenavn) VALUES (1, 1, 'Natto
 INSERT INTO togrute (operatorId, banestrekningId, rutenavn, motHovedretning) VALUES (1, 1, 'Morgentog fra Mo i Rana til Trondheim', 1);
 
 -- Togrute 1
-INSERT INTO stopp VALUES (1, 1, 1, '07:49:00');
-INSERT INTO stopp VALUES (1, 2, 1, '09:51:00');
-INSERT INTO stopp VALUES (1, 3, 1, '13:20:00');
-INSERT INTO stopp VALUES (1, 4, 1, '14:31:00');
-INSERT INTO stopp VALUES (1, 5, 1, '16:49:00');
-INSERT INTO stopp VALUES (1, 6, 1, '17:34:00');
+INSERT INTO stopp (togruteId, sekvensnr, banestrekningId, tidspunkt) VALUES (1, 1, 1, '07:49:00');
+INSERT INTO stopp (togruteId, sekvensnr, banestrekningId, tidspunkt) VALUES (1, 2, 1, '09:51:00');
+INSERT INTO stopp (togruteId, sekvensnr, banestrekningId, tidspunkt) VALUES (1, 3, 1, '13:20:00');
+INSERT INTO stopp (togruteId, sekvensnr, banestrekningId, tidspunkt) VALUES (1, 4, 1, '14:31:00');
+INSERT INTO stopp (togruteId, sekvensnr, banestrekningId, tidspunkt) VALUES (1, 5, 1, '16:49:00');
+INSERT INTO stopp (togruteId, sekvensnr, banestrekningId, tidspunkt) VALUES (1, 6, 1, '17:34:00');
 
 -- Togrute 2
-INSERT INTO stopp VALUES (2, 1, 1, '23:05:00');
-INSERT INTO stopp VALUES (2, 2, 1, '00:57:00');
-INSERT INTO stopp VALUES (2, 3, 1, '04:41:00');
-INSERT INTO stopp VALUES (2, 4, 1, '05:55:00');
-INSERT INTO stopp VALUES (2, 5, 1, '08:19:00');
-INSERT INTO stopp VALUES (2, 6, 1, '09:05:00');
+INSERT INTO stopp (togruteId, sekvensnr, banestrekningId, tidspunkt) VALUES (2, 1, 1, '23:05:00');
+INSERT INTO stopp (togruteId, sekvensnr, banestrekningId, tidspunkt, dagOffset) VALUES (2, 2, 1, '00:57:00', 1);
+INSERT INTO stopp (togruteId, sekvensnr, banestrekningId, tidspunkt, dagOffset) VALUES (2, 3, 1, '04:41:00', 1);
+INSERT INTO stopp (togruteId, sekvensnr, banestrekningId, tidspunkt, dagOffset) VALUES (2, 4, 1, '05:55:00', 1);
+INSERT INTO stopp (togruteId, sekvensnr, banestrekningId, tidspunkt, dagOffset) VALUES (2, 5, 1, '08:19:00', 1);
+INSERT INTO stopp (togruteId, sekvensnr, banestrekningId, tidspunkt, dagOffset) VALUES (2, 6, 1, '09:05:00', 1);
 
 -- Togrute 3
-INSERT INTO stopp VALUES (3, 4, 1, '08:11:00');
-INSERT INTO stopp VALUES (3, 3, 1, '09:14:00');
-INSERT INTO stopp VALUES (3, 2, 1, '12:31:00');
-INSERT INTO stopp VALUES (3, 1, 1, '14:13:00');
+INSERT INTO stopp (togruteId, sekvensnr, banestrekningId, tidspunkt) VALUES (3, 4, 1, '08:11:00');
+INSERT INTO stopp (togruteId, sekvensnr, banestrekningId, tidspunkt) VALUES (3, 3, 1, '09:14:00');
+INSERT INTO stopp (togruteId, sekvensnr, banestrekningId, tidspunkt) VALUES (3, 2, 1, '12:31:00');
+INSERT INTO stopp (togruteId, sekvensnr, banestrekningId, tidspunkt) VALUES (3, 1, 1, '14:13:00');
 
 -- Vognmodeller
 INSERT INTO vognModell (modellNavn) VALUES ('SJ-sittevogn-1');
@@ -302,6 +303,7 @@ INSERT INTO ukedag VALUES (3, 5);
 -- Togrute 1
 INSERT INTO togruteforekomst (togruteId, ukedagNr, ukeNr, aar) VALUES (1, 1, 14, 2023);
 INSERT INTO togruteforekomst (togruteId, ukedagNr, ukeNr, aar) VALUES (1, 2, 14, 2023);
+
 -- Togrute 2 (har litt ekstra forekomster, for moro skyld / testing)
 INSERT INTO togruteforekomst (togruteId, ukedagNr, ukeNr, aar) VALUES (2, 1, 14, 2023);
 INSERT INTO togruteforekomst (togruteId, ukedagNr, ukeNr, aar) VALUES (2, 2, 14, 2023);
@@ -309,6 +311,8 @@ INSERT INTO togruteforekomst (togruteId, ukedagNr, ukeNr, aar) VALUES (2, 7, 14,
 INSERT INTO togruteforekomst (togruteId, ukedagNr, ukeNr, aar) VALUES (2, 1, 15, 2023);
 
 INSERT INTO togruteforekomst (togruteId, ukedagNr, ukeNr, aar) VALUES (2, 1, 12, 2023);
+INSERT INTO togruteforekomst (togruteId, ukedagNr, ukeNr, aar) VALUES (2, 7, 12, 2023);
+INSERT INTO togruteforekomst (togruteId, ukedagNr, ukeNr, aar) VALUES (2, 6, 12, 2023);
 -- Togrute 3
 INSERT INTO togruteforekomst (togruteId, ukedagNr, ukeNr, aar) VALUES (3, 1, 14, 2023);
 INSERT INTO togruteforekomst (togruteId, ukedagNr, ukeNr, aar) VALUES (3, 2, 14, 2023);
