@@ -197,10 +197,12 @@ class Train_Db_Manager:
               headers='keys', tablefmt='psql', showindex=False))
 
     def get_tickets_from_order(self, order_nr: int):
-        print(tabulate(pd.read_sql_query("""
+        self.execute("""
             SELECT
                 billettNr AS BillettNr,
-                COALESCE(date(strftime('%Y-%m-%d', aar || '-01-01', '+' || (ukedagNr+(ukeNr-1)*7) || ' day')), 'N/A') AS Dato,
+                aar,
+                ukeNr,
+                ukedagNr,
                 rutenavn AS Rutenavn,
                 vogn.vognNr AS VognNr,
                 plassNr AS PlassNr,
@@ -221,7 +223,9 @@ class Train_Db_Manager:
             INNER JOIN jernbanestasjon AS ankomst_jbs ON ankomst_jbs.jernbanestasjonId = sps_an.jernbanestasjonId
             INNER JOIN vogn USING (vognId)
             WHERE ordreNr = {input_ordreNr};
-        """.format(input_ordreNr=order_nr), self.db_connection), headers='keys', tablefmt='psql', showindex=False))
+        """.format(input_ordreNr=order_nr))
+
+        return self.db_cursor.fetchall()
 
     def get_route_by_stations(
         self, start_station_id: int, end_station_id: int,

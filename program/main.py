@@ -11,6 +11,8 @@ isRunningOnMacos = platform.startswith("darwin")
 if isRunningOnMacos:  # darwin = macos
     import readline
 
+print(hasattr(datetime, 'fromisocalendar'))
+
 COMMANDS = [
     "hent_togruter_for_stasjon", "hent_ruter_mellom_stasjoner",
     "registrer_bruker", "finn_ledige_billetter", "kjop_billett", "hent_ordre",
@@ -241,7 +243,18 @@ while True:
             if (do_look_closer.lower() == "y"):
                 ordre_nr = input(
                     "OrdreNr for ordre du ønsker å se billettene på: ")
-                db_manager.get_tickets_from_order(ordre_nr)
+                tickets = db_manager.get_tickets_from_order(ordre_nr)
+
+                print(
+                    tabulate(
+                    pd.DataFrame(
+                        tickets,
+                        columns=["BillettNr", "År", "Uke", "Ukedag", "Rutenavn",
+                                 "VognNr", "PlassNr", "Avgang (kl.)", 
+                                 "Fra stasjon", "Kommer fram (kl.)", 
+                                 "Til stasjon"]),
+                    headers='keys', tablefmt='psql', showindex=False)
+                )
         else:
             print("Bruk: hent_ordre kundenummer")
 
