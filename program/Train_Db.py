@@ -534,12 +534,15 @@ class Train_Db_Manager:
         sql_sentence = '''
         SELECT 
         jernbanestasjon.navn AS stasjonsnavn,
-        sekvensNr
+        stopp.sekvensnr AS sekvensnr
         FROM togrute 
         INNER JOIN stopp USING(togruteId,banestrekningId) 
         INNER JOIN stasjonPaaStrekning USING(banestrekningId,sekvensnr) 
         INNER JOIN jernbanestasjon USING (jernbanestasjonId) 
-        WHERE togruteId = {togrute_id_input};
+        WHERE togruteId = {togrute_id_input}
+        ORDER BY 
+            CASE WHEN motHovedretning=0 THEN stopp.sekvensnr END ASC,
+            CASE WHEN motHovedretning=1 THEN stopp.sekvensnr END DESC;
         '''.format(togrute_id_input=togrute_id)
 
         print(
