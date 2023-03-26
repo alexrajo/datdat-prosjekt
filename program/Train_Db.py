@@ -92,7 +92,7 @@ class Train_Db_Manager:
                 vogn_plasser.plassNr, 
                 vognId,
                 togruteforekomstMulig.forekomstId AS togruteforekomstId,
-                COALESCE(date(strftime('%Y-%m-%d', aar || '-01-01', '+' || (ukedagNr+(ukeNr-1)*7+startstopp.dagOffset) || ' day')), 'N/A') AS dato,
+                COALESCE(date(strftime('%Y-%m-%d', aar || '-01-01', '+' || (ukedagNr+(ukeNr-1)*7+startstopp.dagOffset) || ' day')), 'N/A') AS avgangsdato,
                 vognModell.modellnavn AS vogntype
             FROM togruteforekomst AS togruteforekomstMulig
             INNER JOIN togrute USING(togruteId)
