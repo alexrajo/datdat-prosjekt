@@ -17,6 +17,7 @@ class Train_Db_Manager:
     def __init__(self, db_location: str):
         self.db_connection = connect(db_location)
         self.db_cursor = self.db_connection.cursor()
+        self.execute("PRAGMA foreign_keys = ON;")
 
     def __del__(self):
         self.db_connection.close()
