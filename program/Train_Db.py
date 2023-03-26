@@ -272,7 +272,8 @@ class Train_Db_Manager:
         INNER JOIN togruteforekomst USING (togruteId)
         WHERE (
             jernbanestasjonId = {input_startstasjonId}
-            AND togruteId IN (
+            AND 
+            togruteId IN (
                 SELECT sluttstopp.togruteId FROM togrute AS t2
                 INNER JOIN stopp AS sluttstopp USING (togruteId)
                 INNER JOIN stasjonPaaStrekning 
@@ -287,19 +288,26 @@ class Train_Db_Manager:
                     AND startstopp.sekvensnr > sluttstopp.sekvensnr)
                     )
             )
-            AND
-            (
-            aar = {input_aar}
-            AND
-                (
-                ukeNr = {input_ukeNr} AND (ukedagNr + startstopp.dagOffset = {input_ukedagNr} 
-                OR ukedagNr + startstopp.dagOffset = {input_ukedagNr} + 1)
-                OR {input_ukedagNr} = 7 
-                AND ukeNr = {input_ukeNr} + 1 AND ukedagNr + startstopp.dagOffset = 1
+            AND (
+                aar = {input_aar}
+                AND (
+                    ukeNr = {input_ukeNr} AND (
+                        ukedagNr + startstopp.dagOffset = {input_ukedagNr}
+                        OR
+                        ukedagNr + startstopp.dagOffset = {input_ukedagNr} + 1
+                    )
+                ) 
+                OR
+                (ukeNr = {input_ukeNr} - 1 AND (ukedagNr-1 + startstopp.dagOffset) % 7 + 1 = {input_ukedagNr})
+                OR (
+                    {input_ukedagNr} = 7 
+                    AND 
+                    ukeNr = {input_ukeNr} + 1 
+                    AND 
+                    (ukedagNr-1 + startstopp.dagOffset) % 7 + 1 = 1
                 )
             )
-            OR
-            (
+            OR (
             aar = {input_aar} - 1
             AND
                 (
@@ -312,8 +320,7 @@ class Train_Db_Manager:
                 {input_ukedagNr} = {weekday_of_first_day_of_year}
                 )
             )
-            OR
-            (
+            OR (
             aar = {input_aar} + 1
             AND
                 (
