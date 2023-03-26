@@ -248,7 +248,7 @@ class Train_Db_Manager:
         banestrekningId, 
         tidspunkt AS avgang
         FROM togrute 
-        INNER JOIN stopp AS startstopp USING (togruteId)
+        INNER JOIN stopp AS startstopp USING (togruteId, banestrekningId)
         INNER JOIN stasjonPaaStrekning USING (banestrekningId, sekvensNr)
         INNER JOIN jernbanestasjon USING (jernbanestasjonId)
         INNER JOIN togruteforekomst USING (togruteId)
