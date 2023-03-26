@@ -1,5 +1,5 @@
 import Train_Db as tdb
-from messages import HELP, QUIT
+from messages import HELP, QUIT, READY
 from utils import *
 import os
 from sys import platform
@@ -11,10 +11,11 @@ isRunningOnMacos = platform.startswith("darwin")
 if isRunningOnMacos:  # darwin = macos
     import readline
 
-COMMANDS = ["hent_togruter_for_stasjon", "hent_ruter_mellom_stasjoner",
-            "registrer_bruker", "finn_ledige_billetter", "kjop_billett",
-            "hent_ordre", "finn_jernbanestasjon_for_togrute",
-            "finn_banestrekninger", "finn_togruter_for_banestrekning", ]
+COMMANDS = [
+    "hent_togruter_for_stasjon", "hent_ruter_mellom_stasjoner",
+    "registrer_bruker", "finn_ledige_billetter", "kjop_billett", "hent_ordre",
+    "finn_jernbanestasjon_for_togrute", "finn_banestrekninger",
+    "finn_togruter_for_banestrekning", "ny_vognmodell"]
 
 
 def completer(text, state):
@@ -29,7 +30,7 @@ dir_path = os.path.dirname(os.path.realpath(__file__))
 db_manager = tdb.Train_Db_Manager(dir_path + "/../data/tog.db")
 
 
-print("TogDB CLI er klar for bruk. Skriv 'hjelp' / 'h' for mer informasjon.")
+print(READY)
 while True:
     if isRunningOnMacos:
         readline.parse_and_bind("tab: complete")
@@ -59,16 +60,17 @@ while True:
                         pd.DataFrame(
                             available_tickets,
                             columns=["plassNr", "vognId", "dato",
-                                    "vogntype", "togruteforekomstId"]),
+                                     "vogntype", "togruteforekomstId"]),
                         headers='keys', tablefmt='psql', showindex=False))
 
-            print("sekvensnr valgt start: {sekstart}\n".format(sekstart=start_station_seq_nr) +
-                  "sekvensnr valgt ende: {sekende}".format(
-                      sekende=end_station_seq_nr
-                  ))
+            print("sekvensnr valgt start: {sekstart}\n".format(
+                sekstart=start_station_seq_nr) +
+                "sekvensnr valgt ende: {sekende}".format(
+                sekende=end_station_seq_nr))
 
-
-        if len(arglist) == 1:
+        if "-h" in arglist:
+            print(HELP["finn_ledige_billetter"])
+        elif len(arglist) == 1:
             # Vis baner
             print("\nDette er banestrekningene som eksisterer på jernbanenettet:")
             db_manager.get_banestrekninger()
@@ -98,18 +100,16 @@ while True:
             proceed()
 
         else:
-            print(
-                '''
-                Bruk: finn_ledige_billetter togruteId startSekvensNr sluttSekvensNr
-                Eller: finn_ledige_billetter
-                '''
-            )
+            print(HELP["finn_ledige_billetter"])
 
     # Oppgave c), få ut alle togruter for en gitt jernbanestasjon på en gitt
     # ukedag
     # Tar inn en stasjon og en ukedag
     if argument_list[0] == "hent_togruter_for_stasjon":
-        if len(argument_list) == 1:
+        if "-h" in argument_list:
+            print(HELP["hent_togruter_for_stasjon"])
+
+        elif len(argument_list) == 1:
             print("Dette er eksisterende jernbanestasjoner")
             db_manager.get_all_stops()
             stopp: int = int(input("Velg en jernbanestasjonId: "))
@@ -123,15 +123,15 @@ while True:
                 int(argument_list[2]))
 
         else:
-            print(
-                "Bruk: hent_togruter_for_stasjon jernbanestasjonId ukedagNr " +
-                "(1: mandag - 7: søndag) \nEller: hent_togruter_for_stasjon")
+            print(HELP["hent_togruter_for_stasjon"])
 
     # Oppgave d), togruter mellom start-stasjon og slutt-stasjon
     # Returnere alle tider samme dag og neste dag
     elif argument_list[0] == "hent_ruter_mellom_stasjoner":
+        if "-h" in argument_list:
+            print(HELP["hent_ruter_mellom_stasjoner"])
 
-        if len(argument_list) == 1:
+        elif len(argument_list) == 1:
             print("Dette er eksisterende jernbanestasjoner")
             db_manager.get_all_stops()
             stopp_fra: int = int(
@@ -160,18 +160,13 @@ while True:
             )
 
         else:
-            print(
-                "Bruk: hent_ruter_mellom_stasjoner startstasjonid " +
-                "sluttstasjonid yyyy-mm-dd")
+            print(HELP["hent_ruter_mellom_stasjoner"])
 
     # Oppgave e) registrer bruker
-    elif argument_list[0] == "registrer_bruker":
-        if len(argument_list) < 5:
-            print(
-                "Bruk: registrer_bruker email phone_number etternavn" +
-                " fornavn <optional x antall mellomnavn>\n" +
-                "Eksempel: registrer_bruker ex@mail.com 40060200 nordmann " +
-                "ola mellomnavn annetmellomnavn")
+    elif argument_list[0] == "registrer_bruker":  # TODO: add confirmation
+        if "-h" in argument_list or len(argument_list) < 5:
+            print(HELP["registrer_bruker"])
+
         else:
             first_name = ' '.join(argument_list[4:])
             db_manager.register_user(
@@ -186,7 +181,10 @@ while True:
         finn_ledige_billetter(argument_list)
 
     elif argument_list[0] == "kjop_billett":
-        if len(argument_list) == 1:
+        if len(argument_list) != 7 or "-h" in argument_list:
+            print(HELP["kjop_billett"])
+
+        elif len(argument_list) == 1:
             # Vis kunder
             print("\nRegistrerte kunder:")
             db_manager.get_all_customers()
@@ -196,7 +194,7 @@ while True:
             attr_args = ""
             while len(attr_args.split(" ")) != 5 and attr_args != "finn_ledige_billetter":
                 print("\nSkriv inn vogn_id plass_nr sekvens_nr_start sekvens_nr_ende togruteforekomst_id\n"
-                    +"Vet du ikke hva du skal skrive inn? Bruk kommando: finn_ledige_billetter\n")
+                      + "Vet du ikke hva du skal skrive inn? Bruk kommando: finn_ledige_billetter\n")
                 attr_args = input("Skriv inn: ")
 
             if (attr_args == "finn_ledige_billetter"):
@@ -211,14 +209,6 @@ while True:
                     kunde_nr,
                     int(attr_args[4]))
 
-        elif len(argument_list) != 7:
-            print(
-                "Bruk: kjop_billett vogn_id plass_nr sekvens_nr_start " +
-                "sekvens_nr_ende kundenr togruteforekomst_id\n" +
-                "Eller: kjop_billett\n\n" +
-                "Om du er usikker på hva disse feltene skal være, bruk:\n" +
-                "finn_ledige_billetter"
-            )
         else:
             db_manager.create_ticket(
                 int(argument_list[1]),
@@ -230,7 +220,9 @@ while True:
 
     # Oppgave h) info om tidligere kjøp for fremtidige reiser
     elif argument_list[0] == "hent_ordre":
-        if len(argument_list) == 2:
+        if "-h" in argument_list:
+            print(HELP["kjop_billett"])
+        elif len(argument_list) == 2:
             db_manager.get_orders(argument_list[1])
         elif len(argument_list) == 1:
             print("Registrerte brukere:")
@@ -238,18 +230,20 @@ while True:
             kunde_nr: int = int(
                 input("Kundenr du ønsker å hente ordre fra: "))
             db_manager.get_orders(kunde_nr)
-            do_look_closer = input("Vil du se bilettene dine på en ordre? (y/n): ")
+            do_look_closer = input(
+                "Vil du se bilettene dine på en ordre? (y/n): ")
             if (do_look_closer.lower() == "y"):
-                ordre_nr = input("OrdreNr for ordre du ønsker å se billettene på: ")
+                ordre_nr = input(
+                    "OrdreNr for ordre du ønsker å se billettene på: ")
                 db_manager.get_tickets_from_order(ordre_nr)
         else:
             print("Bruk: hent_ordre kundenummer")
 
     # lage ny vognmodell
-    elif argument_list[0] == "ny_vognmodell":
-        if len(argument_list) != 2:
-            print(
-                "Bruk: ny_vognmodell modellnavn")
+    elif argument_list[0] == "ny_vognmodell" or "-h" in argument_list:
+        if len(argument_list) != 2 or "-h" in argument_list:
+            print(HELP["ny_vognmodell"])
+
         else:
             isSittingCart = input("Sittevogn? y/n: ").lower() == "y"
 
@@ -272,10 +266,10 @@ while True:
 
     # Finn jernbanestasjoner for gitt togrute
     elif argument_list[0] == "finn_jernbanestasjon_for_togrute":
-        if len(argument_list) != 2:
-            print("Bruk: finn_jernbanestasjon_for_togrute togrute_id")
+        if len(argument_list) != 2 or "-h" in argument_list:
+            print(HELP["finn_jernbanestasjon_for_togrute"])
         else:
-            raise Exception("Unimplemented")
+            db_manager.get_sequence_n(int(argument_list[1]))
 
     # Finn banestrekninger
     elif argument_list[0] == "finn_banestrekninger":
@@ -283,7 +277,7 @@ while True:
 
     elif argument_list[0] == "finn_togruter_for_banestrekning":
         if len(argument_list) != 2:
-            print("Bruk: finn_togruter_for_banestrekning banestrekning_id")
+            print(HELP["finn_togruter_for_banestrekning"])
         else:
             db_manager.get_train_routes_on_banestrekning(int(argument_list[1]))
 
@@ -293,10 +287,15 @@ while True:
         break
 
     elif argument_list[0] in ["help", "h", "", "hjelp"]:
-        print(HELP)
+        print(HELP["main"])
 
     else:
         print("Kommando ikke gjenkjent. Skriv \"hjelp\" for hjelp.")
 
 
 del db_manager
+
+
+# TODO: ordre henter fra alle brukere
+
+# TODO: kjop_billett finn kunder
