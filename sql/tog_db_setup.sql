@@ -192,7 +192,6 @@ CREATE TABLE operator (
 
 CREATE TABLE stopp (
     togruteId INTEGER,
-    banestrekningId INTEGER,
     sekvensnr INTEGER,
     tidspunkt TIME NOT NULL,
 
