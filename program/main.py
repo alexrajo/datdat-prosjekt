@@ -133,7 +133,7 @@ print(READY)
 while True:
     if isRunningOnMacos:
         readline.parse_and_bind("tab: complete")
-        readline.parse_and_bind('bind ^I rl_complete')
+        # readline.parse_and_bind('bind ^I rl_complete')
         readline.set_completer(completer)
     # Venter på en kommando fra input, kommando skal ikke være case sensitive
     command = input('$ ')
