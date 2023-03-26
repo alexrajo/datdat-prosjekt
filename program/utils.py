@@ -8,6 +8,10 @@ def get_weekday_year_from_string(date_string: str):
     year = int(date.strftime('%Y'))
     return weekday_number, week_number, year
 
+def get_date_from_weekinfo(year: int, week: int, weekday: int):
+    date_string = "{}-W{}-{}".format(year, week, weekday)
+    return datetime.datetime.strptime(date_string, "%Y-W%W-%w").date()
+
 
 if __name__ == "__main__":
     command = input()
