@@ -1,3 +1,5 @@
+PRAGMA foreign_keys = ON;
+
 CREATE TABLE kunde (
     kundenummer INTEGER PRIMARY KEY AUTOINCREMENT,
     fornavn TEXT NOT NULL,
@@ -145,12 +147,20 @@ CREATE TABLE vognModell (
 CREATE TABLE sittevognModell (
     vognModellId INTEGER PRIMARY KEY,
     stolrader INTEGER NOT NULL,
-    seterPerRad INTEGER NOT NULL
+    seterPerRad INTEGER NOT NULL,
+
+    FOREIGN KEY (vognModellId) REFERENCES vognModell(vognModellId)
+        ON UPDATE CASCADE
+        ON DELETE CASCADE
 );
 
 CREATE TABLE sovevognModell (
     vognModellId INTEGER PRIMARY KEY,
-    kupeer INTEGER NOT NULL
+    kupeer INTEGER NOT NULL,
+
+    FOREIGN KEY (vognModellId) REFERENCES vognModell(vognModellId)
+        ON UPDATE CASCADE
+        ON DELETE CASCADE
 );
 
 CREATE TABLE vogn (
@@ -182,6 +192,7 @@ CREATE TABLE operator (
 
 CREATE TABLE stopp (
     togruteId INTEGER,
+    banestrekningId INTEGER,
     sekvensnr INTEGER,
     tidspunkt TIME NOT NULL,
 
