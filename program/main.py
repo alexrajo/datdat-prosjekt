@@ -136,10 +136,11 @@ while True:
         readline.parse_and_bind('bind ^I rl_complete')
         readline.set_completer(completer)
     # Venter på en kommando fra input, kommando skal ikke være case sensitive
-    command = input('$ ').lower()
+    command = input('$ ')
 
     # Splitter opp kommandoen
     argument_list = command.split(" ")
+    argument_list[0] = argument_list[0].lower()
 
     # Oppgave c), få ut alle togruter for en gitt jernbanestasjon på en gitt
     # ukedag
@@ -208,6 +209,7 @@ while True:
 
         else:
             first_name = ' '.join(argument_list[4:])
+            print(first_name)
             db_manager.register_user(
                 first_name,
                 argument_list[3],
