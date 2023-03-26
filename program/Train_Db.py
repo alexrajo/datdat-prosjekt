@@ -1,5 +1,5 @@
 from sqlite3 import Cursor, Connection, connect
-from datetime import datetime
+from datetime import datetime, timedelta
 import pandas as pd
 from tabulate import tabulate
 import math
@@ -183,7 +183,7 @@ class Train_Db_Manager:
             OR (
             aar = {current_aar} AND ukeNr > {current_ukeNr}
             ) OR (
-            aar = {current_aar} AND ukeNr = {current_ukeNr} AND ukedagNr > {current_ukedagNr}
+            aar = {current_aar} AND ukeNr = {current_ukeNr} AND ukedagNr >= {current_ukedagNr}
             )
         );
         """.format(
@@ -432,7 +432,7 @@ class Train_Db_Manager:
                     "En av billettene du vil kjøpe er ikke ledig / finnes ikke")
             self.execute(
                 """
-                    SELECT tidspunkt, togruteforekomst.ukedagNr, ukeNr, aar FROM togruteforekomst 
+                    SELECT tidspunkt, togruteforekomst.ukedagNr, ukeNr, aar, dagOffset FROM togruteforekomst 
                     INNER JOIN ukedag USING (togruteId) 
                     INNER JOIN stopp USING (togruteId)
                     WHERE (
@@ -445,13 +445,14 @@ class Train_Db_Manager:
             row = self.db_cursor.fetchone()
             year = row[3]
             week_number = row[2]
-            day_number = str(int(row[1])-1)
+            day_number = str(int(row[1]))
+            dayOffset = row[4]
             time_object = datetime.strptime(str(row[0]), '%H:%M:%S').time()
             date_object = datetime.strptime(
-                f"{year}-{week_number}-{day_number}", "%Y-%W-%w").date()
+                f"{year}-{week_number}-{day_number}", "%Y-%W-%u").date()
             combined_object = datetime.combine(date_object, time_object)
             current_time = datetime.now()
-            if (current_time > combined_object):
+            if (current_time > combined_object + timedelta(days=dayOffset)):
                 return print("The train has already passed the start-station")
             self.execute(
                 """
@@ -495,7 +496,8 @@ class Train_Db_Manager:
             VALUES (?,?,?,?,?,?)
             """, listOfRecords)
         self.db_connection.commit()
-        return True
+        return print("\n\nSuksess! Vi ønsker deg/dere en god tur!\n\n")
+        
 
     def create_cart_model(self, modelname, isSittingCart, seatRows, seatsPerRow,
                           compartments):
