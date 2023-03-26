@@ -229,7 +229,7 @@ class Train_Db_Manager:
 
     def get_route_by_stations(
         self, start_station_id: int, end_station_id: int,
-            datetime: datetime, arrives: bool):
+            datetimeInput: datetime, arrives: bool):
         """Prints all train routes that arrives at given end station before a 
         specified datetime or leaves at a given start station before a specified 
         datetime.
@@ -246,6 +246,19 @@ class Train_Db_Manager:
             void
 
         """
+        year = datetimeInput.year # extract the year from the datetime object
+        # create datetime objects for the first day of the year, the first day of the year after, and the last day of the year
+        last_day_of_last_year = datetime(year-1, 12, 31)
+        first_day_of_year = datetime(year, 1, 1)
+        first_day_of_next_year = datetime(year+1, 1, 1)
+        last_day_of_year = datetime(year, 12, 31)
+
+        # get the weekday number for each date object
+        weekday_of_last_day_of_last_year = last_day_of_last_year.weekday() + 1
+        weekday_of_first_day_of_year = first_day_of_year.weekday() + 1
+        weekday_of_first_day_of_next_year = first_day_of_next_year.weekday() + 1
+        weekday_of_last_day_of_year = last_day_of_year.weekday() + 1
+
         print(tabulate(pd.read_sql_query("""
         SELECT DISTINCT
         togruteid, 
@@ -275,24 +288,56 @@ class Train_Db_Manager:
                     )
             )
             AND
-            aar = {input_aar} 
-            AND 
             (
-                ukeNr = {input_ukeNr} AND (ukedagNr = {input_ukedagNr} 
-                OR ukedagNr = {input_ukedagNr} + 1)
+            aar = {input_aar}
+            AND
+                (
+                ukeNr = {input_ukeNr} AND (ukedagNr + startstopp.dagOffset = {input_ukedagNr} 
+                OR ukedagNr + startstopp.dagOffset = {input_ukedagNr} + 1)
                 OR {input_ukedagNr} = 7 
-                AND ukeNr = {input_ukeNr} + 1 AND ukedagNr = 1
+                AND ukeNr = {input_ukeNr} + 1 AND ukedagNr + startstopp.dagOffset = 1
+                )
             )
             OR
-            aar = {input_aar} + 1 AND ukeNr = 1 AND ukedagNr = 1
+            (
+            aar = {input_aar} - 1
+            AND
+                (
+                ukeNr = 52
+                AND
+                ukedagNr + startstopp.dagOffset > {weekday_of_last_day_of_last_year}
+                AND
+                {input_ukeNr} = 1
+                AND 
+                {input_ukedagNr} = {weekday_of_first_day_of_year}
+                )
+            )
+            OR
+            (
+            aar = {input_aar} + 1
+            AND
+                (
+                ukeNr = 1
+                AND
+                ukedagNr + startstopp.dagOffset = {weekday_of_first_day_of_next_year}
+                AND
+                {input_ukeNr} = 52
+                AND 
+                {input_ukedagNr} = {weekday_of_last_day_of_year}
+                )
+            )
         )
         ORDER BY avgang, ukedagNr, ukeNr, aar, avgang;
         """.format(
             input_startstasjonId=start_station_id,
             input_sluttstasjonId=end_station_id,
-            input_aar=datetime.isocalendar()[0],
-            input_ukeNr=datetime.isocalendar()[1],
-            input_ukedagNr=datetime.isocalendar()[2]
+            input_aar=datetimeInput.isocalendar()[0],
+            input_ukeNr=datetimeInput.isocalendar()[1],
+            input_ukedagNr=datetimeInput.isocalendar()[2],
+            weekday_of_last_day_of_last_year = weekday_of_last_day_of_last_year,
+            weekday_of_first_day_of_year = weekday_of_first_day_of_year,
+            weekday_of_first_day_of_next_year = weekday_of_first_day_of_next_year,
+            weekday_of_last_day_of_year = weekday_of_last_day_of_year
         ), self.db_connection), headers='keys', tablefmt='psql', showindex=False))
 
     def get_train_routes(self, station_id: int, weekday_n: int):
