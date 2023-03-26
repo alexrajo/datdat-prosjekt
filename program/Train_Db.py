@@ -351,8 +351,8 @@ class Train_Db_Manager:
         return res.lastrowid
 
     def create_tickets(
-            self, 
-            cartsPlacementsAndSequences, 
+            self,
+            cartsPlacementsAndSequences,
             customer_n: int, train_route_instance_id: int):
         """Creates a ticket for customer with customer_id, 
         and creates an order on it at the same time.
@@ -382,23 +382,26 @@ class Train_Db_Manager:
             id += 1
         for cartPlacementSeq1 in placements:
             for cartPlacementSeq2 in placements:
-                if cartPlacementSeq1[-1] == cartPlacementSeq2[-1]: continue
+                if cartPlacementSeq1[-1] == cartPlacementSeq2[-1]:
+                    continue
                 # ticket 1
                 cart_id = int(cartPlacementSeq1[0])
                 placement_n = int(cartPlacementSeq1[1])
                 sequence_n_start = int(cartPlacementSeq1[2])
                 sequence_n_end = int(cartPlacementSeq1[3])
-                # ticket 2 
+                # ticket 2
                 cart_id2 = int(cartPlacementSeq2[0])
                 placement_n2 = int(cartPlacementSeq2[1])
                 sequence_n_start2 = int(cartPlacementSeq2[2])
                 sequence_n_end2 = int(cartPlacementSeq2[3])
                 # do they overlap in sequece numbers?
-                hasOverlap = ((sequence_n_start < sequence_n_end2) and (sequence_n_end > sequence_n_start2))
+                hasOverlap = ((sequence_n_start < sequence_n_end2)
+                              and (sequence_n_end > sequence_n_start2))
                 if (cart_id == cart_id2 and placement_n == placement_n2 and hasOverlap):
-                    return print("Ugyldig bestilling! Noen av billettene overlapper hverandre")
+                    return print(
+                        "Ugyldig bestilling! Noen av billettene overlapper hverandre")
                 print(cartPlacementSeq1, cartPlacementSeq2)
-    
+
         for cartPlacementSeq in cartsPlacementsAndSequences:
             cart_id = int(cartPlacementSeq[0])
             placement_n = int(cartPlacementSeq[1])
@@ -411,9 +414,11 @@ class Train_Db_Manager:
                     
                 """.format(train_route_instance_id=train_route_instance_id))
             row = self.db_cursor.fetchone()
-            if row is None: return print("En av billettene finnes ikke for denne turen")
+            if row is None:
+                return print("En av billettene finnes ikke for denne turen")
             togrute = row[0]
-            listOfTickets = self.find_tickets(togrute, sequence_n_start, sequence_n_end)
+            listOfTickets = self.find_tickets(
+                togrute, sequence_n_start, sequence_n_end)
             foundTicket = False
             for ticket in listOfTickets:
                 harPlass = ticket[0] == placement_n
@@ -422,7 +427,9 @@ class Train_Db_Manager:
                 if harPlass and harVogn and harForekomst:
                     foundTicket = True
                     break
-            if not foundTicket: return print("En av billettene du vil kjøpe er ikke ledig / finnes ikke")
+            if not foundTicket:
+                return print(
+                    "En av billettene du vil kjøpe er ikke ledig / finnes ikke")
             self.execute(
                 """
                     SELECT tidspunkt, togruteforekomst.ukedagNr, ukeNr, aar FROM togruteforekomst 
@@ -465,7 +472,7 @@ class Train_Db_Manager:
             INSERT INTO kundeOrdre(kjopstidspunkt,kundenummer,forekomstId)
             VALUES (DateTime('now'),{customer_n},{train_route_instance_id})
             """.format(customer_n=customer_n,
-                    train_route_instance_id=train_route_instance_id))
+                       train_route_instance_id=train_route_instance_id))
         # Billett
         listOfRecords = []
         for cartPlacementSeq in cartsPlacementsAndSequences:
@@ -473,7 +480,8 @@ class Train_Db_Manager:
             placement_n = cartPlacementSeq[1]
             sequence_n_start = cartPlacementSeq[2]
             sequence_n_end = cartPlacementSeq[3]
-            listOfRecords.append((res_order.lastrowid, cart_id, placement_n, sequence_n_start, sequence_n_end))
+            listOfRecords.append(
+                (res_order.lastrowid, cart_id, placement_n, sequence_n_start, sequence_n_end))
         self.db_cursor.executemany(
             """
             INSERT INTO billett(
@@ -525,10 +533,10 @@ class Train_Db_Manager:
         jernbanestasjon.navn AS stasjonsnavn,
         sekvensNr
         FROM togrute 
-        INNER JOIN banestrekning USING(banestrekningId)
-        INNER JOIN stasjonPaaStrekning USING(banestrekningId)
-        INNER JOIN jernbanestasjon USING(jernbanestasjonId)
-        WHERE (togrute.togruteId = {togrute_id_input});
+        INNER JOIN stopp USING(togruteId,banestrekningId) 
+        INNER JOIN stasjonPaaStrekning USING(banestrekningId,sekvensnr) 
+        INNER JOIN jernbanestasjon USING (jernbanestasjonId) 
+        WHERE togruteId = {togrute_id_input};
         '''.format(togrute_id_input=togrute_id)
 
         print(
