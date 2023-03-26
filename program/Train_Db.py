@@ -2,6 +2,7 @@ from sqlite3 import Cursor, Connection, connect
 from datetime import datetime
 import pandas as pd
 from tabulate import tabulate
+import math
 
 
 class Train_Db_Manager:
@@ -349,120 +350,143 @@ class Train_Db_Manager:
         self.db_connection.commit()
         return res.lastrowid
 
-    def create_ticket(
-            self, cart_id: int, placement_n: int, sequence_n_start: int,
-            sequence_n_end: int, customer_n: int, train_route_instance_id: int):
+    def create_tickets(
+            self, 
+            cartsPlacementsAndSequences, 
+            customer_n: int, train_route_instance_id: int):
         """Creates a ticket for customer with customer_id, 
         and creates an order on it at the same time.
 
         Parameters:
-            cart_id (int): id of cart customer buys ticket for.
-            placement_n (int): number corresponding to seat number or bed number
-            in the cart.
-            sequence_n_start (int): sequence number of train stop the trip 
-            starts on.
-            sequence_n_end (int): sequence number of train stop the trip 
-            stops on.
+            cartsPlacementsAndSequences: List of:
+                cart_id (int): id of cart customer buys ticket for.
+                placement_n (int): number corresponding to seat number or bed number
+                in the cart.
+                sequence_n_start (int): sequence number of train stop the trip 
+                starts on.
+                sequence_n_end (int): sequence number of train stop the trip 
+                stops on.
             customer_n (int): number corresponding to customer number of buyer.
             train_route_instance_id (int): number corresponding to id of train 
             route instance.
 
         Returns:
-            (int, int): generated id for (ticket, order).
+            boolean: True if ticked was craeted.
         """
-        self.execute(
-            """
-
-                SELECT togruteId
-                FROM togruteforekomst WHERE forekomstId = {train_route_instance_id}
-                
-            """.format(train_route_instance_id=train_route_instance_id))
-        row = self.db_cursor.fetchone()
-        if row is None:
-            print("Det finnes ingen billetter for denne turen!")
-            return
-        togrute = row[0]
-        listOfTickets = self.find_tickets(
-            togrute, sequence_n_start, sequence_n_end)
-        foundTicket = False
-        for ticket in listOfTickets:
-            harPlass = ticket[0] == placement_n
-            harVogn = ticket[1] == cart_id
-            harForekomst = ticket[-1] == train_route_instance_id
-            if harPlass and harVogn and harForekomst:
-                foundTicket = True
-                break
-        if not foundTicket:
-            return print("Billetten er ikke ledig / finnes ikke")
-        self.execute(
-            """
-                SELECT tidspunkt, togruteforekomst.ukedagNr, ukeNr, aar FROM togruteforekomst 
-                INNER JOIN ukedag USING (togruteId) 
-                INNER JOIN stopp USING (togruteId)
-                WHERE (
-                forekomstId = {train_route_instance_id} 
-                AND 
-                sekvensnr = {sequence_n_start} 
-                )
-            """.format(
-                train_route_instance_id=train_route_instance_id, sequence_n_start=sequence_n_start))
-        row = self.db_cursor.fetchone()
-        year = row[3]
-        week_number = row[2]
-        day_number = str(int(row[1])-1)
-        time_object = datetime.strptime(str(row[0]), '%H:%M:%S').time()
-        date_object = datetime.strptime(
-            f"{year}-{week_number}-{day_number}", "%Y-%W-%w").date()
-        combined_object = datetime.combine(date_object, time_object)
-        print(combined_object)
-        current_time = datetime.now()
-        if (current_time > combined_object):
-            return print("The train has already passed the start-station")
-        self.execute(
-            """
-                SELECT * FROM togruteforekomst INNER JOIN togrute USING (togruteId) WHERE forekomstId =
-                {train_route_instance_id} AND motHovedretning = 1
-            """.format(
-                train_route_instance_id=train_route_instance_id))
-        isAgainstMainDirection = self.db_cursor.fetchone()
-        if ((isAgainstMainDirection and sequence_n_start > sequence_n_end) or (not isAgainstMainDirection and sequence_n_start < sequence_n_end)):
-            # Ordre
-            res_order = self.execute(
+        id = 0
+        placements = []
+        for cartPlacementSeq in cartsPlacementsAndSequences:
+            newPlacement = cartPlacementSeq.copy()
+            newPlacement.append(id)
+            placements.append(newPlacement)
+            id += 1
+        for cartPlacementSeq1 in placements:
+            for cartPlacementSeq2 in placements:
+                if cartPlacementSeq1[-1] == cartPlacementSeq2[-1]: continue
+                # ticket 1
+                cart_id = int(cartPlacementSeq1[0])
+                placement_n = int(cartPlacementSeq1[1])
+                sequence_n_start = int(cartPlacementSeq1[2])
+                sequence_n_end = int(cartPlacementSeq1[3])
+                # ticket 2 
+                cart_id2 = int(cartPlacementSeq2[0])
+                placement_n2 = int(cartPlacementSeq2[1])
+                sequence_n_start2 = int(cartPlacementSeq2[2])
+                sequence_n_end2 = int(cartPlacementSeq2[3])
+                # do they overlap in sequece numbers?
+                hasOverlap = ((sequence_n_start < sequence_n_end2) and (sequence_n_end > sequence_n_start2))
+                if (cart_id == cart_id2 and placement_n == placement_n2 and hasOverlap):
+                    return print("Ugyldig bestilling! Noen av billettene overlapper hverandre")
+                print(cartPlacementSeq1, cartPlacementSeq2)
+    
+        for cartPlacementSeq in cartsPlacementsAndSequences:
+            cart_id = int(cartPlacementSeq[0])
+            placement_n = int(cartPlacementSeq[1])
+            sequence_n_start = int(cartPlacementSeq[2])
+            sequence_n_end = int(cartPlacementSeq[3])
+            self.execute(
                 """
-                INSERT INTO kundeOrdre(kjopstidspunkt,kundenummer,forekomstId)
-                VALUES (DateTime('now'),{customer_n},{train_route_instance_id})
-                """.format(customer_n=customer_n,
-                           train_route_instance_id=train_route_instance_id))
-            self.db_connection.commit()
-            # Billett
-            res_ticket = self.execute(
+                    SELECT togruteId
+                    FROM togruteforekomst WHERE forekomstId = {train_route_instance_id}
+                    
+                """.format(train_route_instance_id=train_route_instance_id))
+            row = self.db_cursor.fetchone()
+            if row is None: return print("En av billettene finnes ikke for denne turen")
+            togrute = row[0]
+            listOfTickets = self.find_tickets(togrute, sequence_n_start, sequence_n_end)
+            foundTicket = False
+            for ticket in listOfTickets:
+                harPlass = ticket[0] == placement_n
+                harVogn = ticket[1] == cart_id
+                harForekomst = ticket[-1] == train_route_instance_id
+                if harPlass and harVogn and harForekomst:
+                    foundTicket = True
+                    break
+            if not foundTicket: return print("En av billettene du vil kjøpe er ikke ledig / finnes ikke")
+            self.execute(
                 """
-                INSERT INTO billett(
-                    ordreNr, 
-                    vognId, 
-                    plassNr, 
-                    sekvensNrStart, 
-                    sekvensNrEnde
-                )
-                VALUES (
-                    {order_n}, 
-                    {cart_id}, 
-                    {placement_n}, 
-                    {sequence_n_start}, 
-                    {sequence_n_end}
-                )
+                    SELECT tidspunkt, togruteforekomst.ukedagNr, ukeNr, aar FROM togruteforekomst 
+                    INNER JOIN ukedag USING (togruteId) 
+                    INNER JOIN stopp USING (togruteId)
+                    WHERE (
+                    forekomstId = {train_route_instance_id} 
+                    AND 
+                    sekvensnr = {sequence_n_start} 
+                    )
                 """.format(
-                    order_n=res_order.lastrowid,
-                    cart_id=cart_id,
-                    placement_n=placement_n,
-                    sequence_n_start=sequence_n_start,
-                    sequence_n_end=sequence_n_end
-                ))
-            self.db_connection.commit()
-            return (res_ticket.lastrowid, res_order.lastrowid)
-        else:
-            return print(
-                "You cannot book order a ticket that goes against the direction of the train!")
+                    train_route_instance_id=train_route_instance_id, sequence_n_start=sequence_n_start))
+            row = self.db_cursor.fetchone()
+            year = row[3]
+            week_number = row[2]
+            day_number = str(int(row[1])-1)
+            time_object = datetime.strptime(str(row[0]), '%H:%M:%S').time()
+            date_object = datetime.strptime(
+                f"{year}-{week_number}-{day_number}", "%Y-%W-%w").date()
+            combined_object = datetime.combine(date_object, time_object)
+            print(combined_object)
+            current_time = datetime.now()
+            if (current_time > combined_object):
+                return print("The train has already passed the start-station")
+            self.execute(
+                """
+                    SELECT * FROM togruteforekomst INNER JOIN togrute USING (togruteId) WHERE forekomstId =
+                    {train_route_instance_id} AND motHovedretning = 1
+                """.format(
+                    train_route_instance_id=train_route_instance_id))
+            isAgainstMainDirection = self.db_cursor.fetchone()
+            if ((isAgainstMainDirection and sequence_n_start > sequence_n_end) or (not isAgainstMainDirection and sequence_n_start < sequence_n_end)):
+                continue
+            else:
+                return print(
+                    "You cannot book order a ticket that goes against the direction of the train!")
+        # Ordre
+        res_order = self.execute(
+            """
+            INSERT INTO kundeOrdre(kjopstidspunkt,kundenummer,forekomstId)
+            VALUES (DateTime('now'),{customer_n},{train_route_instance_id})
+            """.format(customer_n=customer_n,
+                    train_route_instance_id=train_route_instance_id))
+        # Billett
+        listOfRecords = []
+        for cartPlacementSeq in cartsPlacementsAndSequences:
+            cart_id = cartPlacementSeq[0]
+            placement_n = cartPlacementSeq[1]
+            sequence_n_start = cartPlacementSeq[2]
+            sequence_n_end = cartPlacementSeq[3]
+            listOfRecords.append((res_order.lastrowid, cart_id, placement_n, sequence_n_start, sequence_n_end))
+        self.db_cursor.executemany(
+            """
+            INSERT INTO billett(
+                ordreNr, 
+                vognId, 
+                plassNr, 
+                sekvensNrStart, 
+                sekvensNrEnde
+            )
+            VALUES (?,?,?,?,?)
+            """, listOfRecords)
+        self.db_connection.commit()
+        return True
 
     def create_cart_model(self, modelname, isSittingCart, seatRows, seatsPerRow,
                           compartments):
