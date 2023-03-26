@@ -164,29 +164,34 @@ class Train_Db_Manager:
 
         current_year, current_week, current_weekday = datetime.today().isocalendar()
 
-        print(tabulate(pd.read_sql_query("""
+        sql = """
         SELECT 
             ordreNr AS 'OrdreNr', 
             kjopstidspunkt AS 'Kjøpstidpunkt', 
             tf.aar AS 'År', 
             tf.ukeNr as Uke,
-            tf.ukedagNr AS Ukedag
+            tf.ukedagNr AS Ukedag,
+            kundeOrdre.kundenummer
         FROM kundeOrdre 
         INNER JOIN togruteforekomst AS tf USING (forekomstId) 
         WHERE kundenummer = {input_kundenummer}
-        AND 
+        AND (
             aar > {current_aar}
             OR (
             aar = {current_aar} AND ukeNr > {current_ukeNr}
             ) OR (
             aar = {current_aar} AND ukeNr = {current_ukeNr} AND ukedagNr > {current_ukedagNr}
-            );
+            )
+        );
         """.format(
             input_kundenummer=customer_n,
             current_aar=current_year,
             current_ukeNr=current_week,
             current_ukedagNr=current_weekday
-        ), self.db_connection), headers='keys', tablefmt='psql', showindex=False))
+        )
+
+        print(tabulate(pd.read_sql_query(sql, self.db_connection),
+              headers='keys', tablefmt='psql', showindex=False))
 
     def get_tickets_from_order(self, order_nr: int):
         print(tabulate(pd.read_sql_query("""
@@ -372,9 +377,11 @@ class Train_Db_Manager:
                 
             """.format(train_route_instance_id=train_route_instance_id))
         row = self.db_cursor.fetchone()
-        if row is None: return print("Det finnes ingen billetter for denne turen!")
+        if row is None:
+            return print("Det finnes ingen billetter for denne turen!")
         togrute = row[0]
-        listOfTickets = self.find_tickets(togrute, sequence_n_start, sequence_n_end)
+        listOfTickets = self.find_tickets(
+            togrute, sequence_n_start, sequence_n_end)
         foundTicket = False
         for ticket in listOfTickets:
             harPlass = ticket[0] == placement_n
@@ -383,7 +390,8 @@ class Train_Db_Manager:
             if harPlass and harVogn and harForekomst:
                 foundTicket = True
                 break
-        if not foundTicket: return print("Billetten er ikke ledig / finnes ikke")
+        if not foundTicket:
+            return print("Billetten er ikke ledig / finnes ikke")
         self.execute(
             """
                 SELECT tidspunkt, togruteforekomst.ukedagNr, ukeNr, aar FROM togruteforekomst 
