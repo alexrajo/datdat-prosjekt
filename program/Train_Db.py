@@ -401,7 +401,6 @@ class Train_Db_Manager:
                 if (cart_id == cart_id2 and placement_n == placement_n2 and hasOverlap):
                     return print(
                         "Ugyldig bestilling! Noen av billettene overlapper hverandre")
-                print(cartPlacementSeq1, cartPlacementSeq2)
 
         for cartPlacementSeq in cartsPlacementsAndSequences:
             cart_id = int(cartPlacementSeq[0])
@@ -451,7 +450,6 @@ class Train_Db_Manager:
             date_object = datetime.strptime(
                 f"{year}-{week_number}-{day_number}", "%Y-%W-%w").date()
             combined_object = datetime.combine(date_object, time_object)
-            print(combined_object)
             current_time = datetime.now()
             if (current_time > combined_object):
                 return print("The train has already passed the start-station")

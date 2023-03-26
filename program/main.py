@@ -47,7 +47,6 @@ def kjop_billett(arglist):
             " ")
         if ticket[0].lower() == "ferdig":
             break
-        print(ticket)
         if len(ticket) == 1 and ticket[0] == '':
             break
         if len(ticket) != 4:
