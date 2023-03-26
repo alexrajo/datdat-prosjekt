@@ -26,6 +26,7 @@ CREATE TABLE kundeOrdre (
 CREATE TABLE billett (
     billettNr INTEGER PRIMARY KEY AUTOINCREMENT,
     ordreNr INTEGER NOT NULL,
+    togruteId INTEGER NOT NULL,
     vognId INTEGER NOT NULL,
     plassNr INTEGER NOT NULL,
     sekvensNrStart INTEGER NOT NULL,
@@ -39,11 +40,11 @@ CREATE TABLE billett (
         ON UPDATE CASCADE
         ON DELETE SET NULL,
 
-    FOREIGN KEY (sekvensNrStart) REFERENCES stopp(sekvensNr)
+    FOREIGN KEY (togruteId, sekvensNrStart) REFERENCES stopp(togruteId, sekvensNr)
         ON UPDATE CASCADE
         ON DELETE SET NULL,
 
-    FOREIGN KEY (sekvensNrEnde) REFERENCES stopp(sekvensNr)
+    FOREIGN KEY (togruteId, sekvensNrEnde) REFERENCES stopp(togruteId, sekvensNr)
         ON UPDATE CASCADE
         ON DELETE SET NULL
 );
@@ -57,11 +58,7 @@ CREATE TABLE togruteforekomst (
 
     UNIQUE(togruteId, ukedagNr, ukeNr, aar),
 
-    FOREIGN KEY (togruteId) REFERENCES togrute(togruteId)
-        ON UPDATE CASCADE
-        ON DELETE CASCADE,
-
-    FOREIGN KEY (ukedagNr) REFERENCES ukedag(ukedagNr)
+    FOREIGN KEY (togruteId, ukedagNr) REFERENCES ukedag(togruteId, ukedagNr)
         ON UPDATE CASCADE
         ON DELETE CASCADE
 );
@@ -193,6 +190,7 @@ CREATE TABLE operator (
 CREATE TABLE stopp (
     togruteId INTEGER,
     sekvensnr INTEGER,
+    banestrekningId INTEGER NOT NULL,
     tidspunkt TIME NOT NULL,
 
     PRIMARY KEY (togruteId, sekvensNr),
@@ -201,7 +199,7 @@ CREATE TABLE stopp (
         ON UPDATE CASCADE
         ON DELETE CASCADE,
 
-    FOREIGN KEY (sekvensnr) REFERENCES stasjonPaaStrekning(sekvensnr)
+    FOREIGN KEY (sekvensnr, banestrekningId) REFERENCES stasjonPaaStrekning(sekvensnr, banestrekningId)
         ON UPDATE CASCADE
         ON DELETE CASCADE
 );
@@ -237,26 +235,26 @@ INSERT INTO togrute (operatorId, banestrekningId, rutenavn) VALUES (1, 1, 'Natto
 INSERT INTO togrute (operatorId, banestrekningId, rutenavn, motHovedretning) VALUES (1, 1, 'Morgentog fra Mo i Rana til Trondheim', 1);
 
 -- Togrute 1
-INSERT INTO stopp VALUES (1, 1, '07:49:00');
-INSERT INTO stopp VALUES (1, 2, '09:51:00');
-INSERT INTO stopp VALUES (1, 3, '13:20:00');
-INSERT INTO stopp VALUES (1, 4, '14:31:00');
-INSERT INTO stopp VALUES (1, 5, '16:49:00');
-INSERT INTO stopp VALUES (1, 6, '17:34:00');
+INSERT INTO stopp VALUES (1, 1, 1, '07:49:00');
+INSERT INTO stopp VALUES (1, 2, 1, '09:51:00');
+INSERT INTO stopp VALUES (1, 3, 1, '13:20:00');
+INSERT INTO stopp VALUES (1, 4, 1, '14:31:00');
+INSERT INTO stopp VALUES (1, 5, 1, '16:49:00');
+INSERT INTO stopp VALUES (1, 6, 1, '17:34:00');
 
 -- Togrute 2
-INSERT INTO stopp VALUES (2, 1, '23:05:00');
-INSERT INTO stopp VALUES (2, 2, '00:57:00');
-INSERT INTO stopp VALUES (2, 3, '04:41:00');
-INSERT INTO stopp VALUES (2, 4, '05:55:00');
-INSERT INTO stopp VALUES (2, 5, '08:19:00');
-INSERT INTO stopp VALUES (2, 6, '09:05:00');
+INSERT INTO stopp VALUES (2, 1, 1, '23:05:00');
+INSERT INTO stopp VALUES (2, 2, 1, '00:57:00');
+INSERT INTO stopp VALUES (2, 3, 1, '04:41:00');
+INSERT INTO stopp VALUES (2, 4, 1, '05:55:00');
+INSERT INTO stopp VALUES (2, 5, 1, '08:19:00');
+INSERT INTO stopp VALUES (2, 6, 1, '09:05:00');
 
 -- Togrute 3
-INSERT INTO stopp VALUES (3, 4, '08:11:00');
-INSERT INTO stopp VALUES (3, 3, '09:14:00');
-INSERT INTO stopp VALUES (3, 2, '12:31:00');
-INSERT INTO stopp VALUES (3, 1, '14:13:00');
+INSERT INTO stopp VALUES (3, 4, 1, '08:11:00');
+INSERT INTO stopp VALUES (3, 3, 1, '09:14:00');
+INSERT INTO stopp VALUES (3, 2, 1, '12:31:00');
+INSERT INTO stopp VALUES (3, 1, 1, '14:13:00');
 
 -- Vognmodeller
 INSERT INTO vognModell (modellNavn) VALUES ('SJ-sittevogn-1');
@@ -320,7 +318,11 @@ INSERT INTO kunde (fornavn, etternavn, email, mobilnummer) VALUES ('Johan', 'Gol
 
 -- Ny kundeordre for togrute 1
 INSERT INTO kundeOrdre (kundenummer, forekomstId) VALUES (1, 2);
-INSERT INTO billett (ordreNr, vognId, plassNr, sekvensNrStart, sekvensNrEnde) VALUES (1, 1, 3, 2, 4);
+INSERT INTO billett (ordreNr, togruteId, vognId, plassNr, sekvensNrStart, sekvensNrEnde) VALUES (1, 
+    (SELECT togruteId FROM kundeOrdre INNER JOIN togruteforekomst USING (forekomstId) WHERE ordreNr=1)
+, 1, 3, 2, 4);
 
 INSERT INTO kundeOrdre (kundenummer, forekomstId) VALUES (1, 7);
-INSERT INTO billett (ordreNr, vognId, plassNr, sekvensNrStart, sekvensNrEnde) VALUES (2, 1, 5, 1, 5);
+INSERT INTO billett (ordreNr, togruteId, vognId, plassNr, sekvensNrStart, sekvensNrEnde) VALUES (2, 
+    (SELECT togruteId FROM kundeOrdre INNER JOIN togruteforekomst USING (forekomstId) WHERE ordreNr=2)
+, 1, 5, 1, 5);
