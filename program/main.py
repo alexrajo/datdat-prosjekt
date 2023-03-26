@@ -30,11 +30,43 @@ dir_path = os.path.dirname(os.path.realpath(__file__))
 db_manager = tdb.Train_Db_Manager(dir_path + "/../data/tog.db")
 
 
-def finn_ledige_billetter(arglist):
-    banestrekning_id: int
-    train_route_id: int
-    start_station_seq_nr: int
-    end_station_seq_nr: int
+    def kjop_billett(arglist): 
+        # Vis kunder
+        print("\nRegistrerte kunder:")
+        db_manager.get_all_customers()
+        kunde_nr = int(input("Hvem er du? Skriv inn ditt kundenummer: "))
+        finn_ledige_billetter(["finn_ledige_billetter"])
+        print("\n\nDu kan nå kjøpe biletter\n\n")
+        togruteforekomst = int(input("\n\nSkriv inn togruteforekomstId: "))
+        # Resten av attributtene
+        print("\n\nTrykk enter uten tekst for å fortsette orderen\n\n")
+        tickets = []
+        while 1:
+            ticket = input("Skriv vogn_id plass_nr sekvens_nr_start sekvens_nr_ende ").split(" ")
+            print(ticket)
+            if len(ticket) == 1 and ticket[0] == '':
+                break
+            if len(ticket) != 4:
+                print("\n\nFeil format.\n"
+                      +"Skriv vogn_id plass_nr sekvens_nr_start sekvens_nr_ende \n\n"
+                      +"Vet du ikke hva du skal skrive inn? Bruk kommando: finn_ledige_billetter\n"
+                      )
+                continue
+            else:
+                tickets.append(ticket)
+        if len(tickets) > 0:
+            db_manager.create_tickets(
+                tickets,
+                int(kunde_nr),
+                int(togruteforekomst))
+        else:
+            print("Du har ikke kjøpt noen billetter")
+
+    def finn_ledige_billetter(arglist):
+        banestrekning_id: int
+        train_route_id: int
+        start_station_seq_nr: int
+        end_station_seq_nr: int
 
     def proceed():
         if (len(arglist) == 4 or len(arglist) == 1):
@@ -184,53 +216,7 @@ while True:
         finn_ledige_billetter(argument_list)
 
     elif argument_list[0] == "kjop_billett":
-        if len(argument_list) not in [1, 7] or "-h" in argument_list:
-            print(HELP["kjop_billett"])
-
-        elif len(argument_list) == 1:
-            # Vis kunder
-            print("\nRegistrerte kunder:")
-            db_manager.get_all_customers()
-            kunde_nr = int(input("Hvem er du? Skriv inn ditt kundenummer: "))
-
-            # Resten av attributtene
-            attr_args = ""
-            while len(attr_args.split(" ")) != 5 and attr_args != "finn_ledige_billetter":
-                print("\nSkriv inn plass_nr vogn_id togruteforekomst_id sekvens_nr_start sekvens_nr_ende\n"
-                      + "Vet du ikke hva du skal skrive inn? Skriv inn: \"finn_ledige_billetter\"\n")
-                attr_args = input("Skriv inn: ")
-
-            if (attr_args == "finn_ledige_billetter"):
-                finn_ledige_billetter(["finn_ledige_billetter"])
-                print("\nSkriv inn plass_nr vogn_id togruteforekomst_id " +
-                      "sekvens_nr_start sekvens_nr_ende \n")
-                attr_args = input("Skriv inn: ")
-                attr_args = attr_args.split(" ")
-                db_manager.create_ticket(
-                    int(attr_args[1]),
-                    int(attr_args[0]),
-                    int(attr_args[3]),
-                    int(attr_args[4]),
-                    kunde_nr,
-                    int(attr_args[2]))
-            else:
-                attr_args = attr_args.split(" ")
-                db_manager.create_ticket(
-                    int(attr_args[1]),
-                    int(attr_args[0]),
-                    int(attr_args[3]),
-                    int(attr_args[4]),
-                    kunde_nr,
-                    int(attr_args[2]))
-
-        else:
-            db_manager.create_ticket(
-                int(argument_list[2]),
-                int(argument_list[1]),
-                int(argument_list[4]),
-                int(argument_list[5]),
-                int(argument_list[6]),
-                int(argument_list[3]))
+        kjop_billett(argument_list)
 
     # Oppgave h) info om tidligere kjøp for fremtidige reiser
     elif argument_list[0] == "hent_ordre":
